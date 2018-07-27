@@ -2,8 +2,12 @@
 This is a backend project for wxapp Zhongyidian.
 
 Database Init:
+
 > 1.python manage.py db init
-  2.python manage.py db.migrate
-  3.python manage.py shell
+
+> 2.python manage.py db.migrate
+
+> 3.python manage.py shell
+
   # enter shell
-  4.db.create_all()
+> 4.db.create_all()
