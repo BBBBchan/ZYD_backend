@@ -7,8 +7,8 @@ Database Init:
 
 > 2.python manage.py db.migrate
 
-> 3.python manage.py shell
+Enter shell:
 
-> //enter shell
+> 3.python manage.py shell
 
 > 4.db.create_all()
