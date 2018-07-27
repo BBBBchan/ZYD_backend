@@ -9,5 +9,6 @@ Database Init:
 
 > 3.python manage.py shell
 
-  # enter shell
+> //enter shell
+
 > 4.db.create_all()
