@@ -23,8 +23,9 @@ class User(db.Model):
     __tablename__ = 'user'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(10))
-    token = db.Column(db.String(50), unique=True)
+    name = db.Column(db.String(10), nullable=True)
+    avatarUrl = db.Column(db.String(100), nullable=True)
+    openid = db.Column(db.String(50), unique=True)
 
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
     role = db.relationship('Role', backref='users')
@@ -55,6 +56,12 @@ class User(db.Model):
     def followed_works(self, cls):
         return cls.query.join(followers, (followers.c.followed_id == cls.author_id)).filter(
             followers.c.follower_id == self.id).order_by(cls.upload_time.desc())
+
+    def is_designer(self):
+        return self.role_id == 2
+
+    def is_admin(self):
+        return self.role_id == 3
 
 
 class Category(db.Model):
