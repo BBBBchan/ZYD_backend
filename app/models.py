@@ -141,7 +141,8 @@ class Picture(db.Model):
 
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     author = db.relationship('User', backref='pictures')
-
+    # 点击量，每一个视频被请求详情时这个数加一
+    clicks = db.Column(db.integer)
 
 class Video(db.Model):
     __tablename__ = 'video'
@@ -156,7 +157,8 @@ class Video(db.Model):
 
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     author = db.relationship('User', backref='videos')
-
+    # 点击量，每一个视频被请求详情时这个数加一
+    clicks = db.Column(db.integer)
 
 class ShowCase(db.Model):
     __tablename__ = 'showcase'
