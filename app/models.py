@@ -142,7 +142,7 @@ class Picture(db.Model):
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     author = db.relationship('User', backref='pictures')
     # 点击量，每一个视频被请求详情时这个数加一
-    clicks = db.Column(db.integer)
+    clicks = db.Column(db.Integer)
 
 class Video(db.Model):
     __tablename__ = 'video'
@@ -158,7 +158,7 @@ class Video(db.Model):
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     author = db.relationship('User', backref='videos')
     # 点击量，每一个视频被请求详情时这个数加一
-    clicks = db.Column(db.integer)
+    clicks = db.Column(db.Integer)
 
 class ShowCase(db.Model):
     __tablename__ = 'showcase'
@@ -184,3 +184,6 @@ class Order(db.Model):
     all_price = db.Column(db.Numeric(precision=2))
     status = db.Column(db.Integer)
     created_time = db.Column(db.DateTime, default=datetime.utcnow)
+
+class TimeText(db.Model):
+    Time = db.Column(db.DateTime, primary_key=True)

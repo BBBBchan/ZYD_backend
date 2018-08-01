@@ -10,4 +10,5 @@ class DevConfig(object):
     DEBUG = True
     SQLALCHEMY_DATABASE_URI = 'sqlite:///database.db'
     SQLALCHEMY_TRACK_MODIFICATIONS = True
-
+    # OSS OPEN IP
+    OSS_URL = ''
