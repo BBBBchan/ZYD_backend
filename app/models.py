@@ -1,7 +1,6 @@
 from datetime import datetime
 from flask_sqlalchemy import SQLAlchemy
 
-
 db = SQLAlchemy()
 
 
@@ -26,12 +25,13 @@ class User(db.Model):
     name = db.Column(db.String(10), nullable=True)
     avatarUrl = db.Column(db.String(100), nullable=True)
     openid = db.Column(db.String(50), unique=True)
+    is_banned = db.Column(db.Boolean, default=False)
 
     role_id = db.Column(db.Integer, db.ForeignKey('role.id'))
     role = db.relationship('Role', backref='users')
 
     tag = db.Column(db.String(30))
-    pricing = db.Column(db.Numeric(precision=2))
+    pricing = db.Column(db.Numeric(scale=2))
     last_login = db.Column(db.DateTime, default=datetime.utcnow)
 
     followed = db.relationship('User', secondary=followers,
@@ -62,6 +62,9 @@ class User(db.Model):
 
     def is_admin(self):
         return self.role_id == 3
+
+    def __str__(self):
+        return self.name
 
 
 class Category(db.Model):
@@ -186,6 +189,7 @@ class Order(db.Model):
     order_id = db.Column(db.String(50))
     customer = db.Column(db.Integer, db.ForeignKey('user.id'))
     seller = db.Column(db.Integer, db.ForeignKey('user.id'))
-    all_price = db.Column(db.Numeric(precision=2))
+    requirements = db.Column(db.Text)
+    all_price = db.Column(db.Numeric(scale=2))
     status = db.Column(db.Integer)
     created_time = db.Column(db.DateTime, default=datetime.utcnow)
