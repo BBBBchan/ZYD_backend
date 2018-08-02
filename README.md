@@ -12,4 +12,3 @@ Enter shell:
 > 3.python manage.py shell
 
 > 4.db.create_all()
-
