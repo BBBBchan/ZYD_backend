@@ -132,5 +132,5 @@ def upload_video():
         db.session.commit()
         return jsonify({'message': 'upload successful'}), 200
     except:
-        db.rollback()
+        db.session.rollback()
         return jsonify({'message': 'failure'}), 403
