@@ -2,12 +2,12 @@ import datetime
 import json
 
 from flask import Blueprint, request, jsonify, abort, g
-from app.utils.wx_api import get_session_key_and_openid, generate_3rd_session, update_token, redis_service
-from app.models import User, db
+
 from app.middlewares import checkLogin
+from app.models import User, db
 from app.utils.serializers import serializer, save_or_not
 from app.utils.utils import upload_avatar, upload_avatar_v1
-
+from app.utils.wx_api import get_session_key_and_openid, generate_3rd_session, update_token, redis_service
 
 user_blueprint = Blueprint('user_blueprint', __name__)
 
@@ -29,11 +29,12 @@ def login():
         user = None
 
     if not user:
+        # user为空，说明为新用户，获取其信息录入数据库
         try:
             name = data['nickName']
             avatar = request.files['avatar']
             url = upload_avatar_v1(avatar)
-            user = User(openid=openid, role_id=1, name=name, avatarUrl=url)
+            user = User(openid=openid, name=name, avatarUrl=url)
             db.session.add(user)
             db.session.commit()
         except:
@@ -46,6 +47,9 @@ def login():
 
 @user_blueprint.route('/token/', methods=['GET'])
 def generate_new_token():
+    """
+    更新用户token
+    """
     token = request.headers['Authorization']
     if not token:
         abort(400)
@@ -78,7 +82,7 @@ def change_user_info():
 @user_blueprint.route('/avatar_v1/', methods=['POST'])
 def avatar_v1():
     """
-    save avatar to local
+    保存图片至服务器
     """
     try:
         avatar = request.files['avatar']
@@ -94,7 +98,7 @@ def avatar_v1():
 @checkLogin
 def change_avatar():
     """
-    save avatar to picture bed
+    保存图片至图床
     """
     try:
         avatar = request.files['avatar']
@@ -173,4 +177,3 @@ def apply():
     })
     redis_service.lpush('apply_list', data)
     return jsonify({'msg': 'OK'}), 200
-

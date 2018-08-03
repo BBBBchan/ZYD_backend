@@ -1,15 +1,44 @@
 from datetime import datetime
+
 from flask_sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
+
+
+class Permission:
+    """
+    使用十六进制表示权限
+    普通用户User:              0x03ff
+    设计师Designer:            0x3fff
+    特约设计师SuperDesigner:    0x1fff
+    管理员Admin:                0x7fff
+    """
+    NAME_MODIFY = 0x0001  # 修改昵称
+    AVATAR_MODIFY = 0x0002  # 修改头像
+    COMMENT = 0x0004  # 评论
+    SHARE = 0x0008  # 分享
+    REPORT = 0x0010  # 举报
+    ORDER_SUBMIT = 0x0020  # 发起订单
+    FOLLOW = 0x0040  # 关注他人
+    DESIGNER_APPLY = 0x0080  # 申请成为设计师
+    WORK_MANAGE = 0x0100  # 上传，修改，删除自己的作品
+    SHOWCASE_MANAGE = 0x0200  # 建立，修改，删除自己的作品集
+    ORDER_RECEIVED_WRITE = 0x0400  # 填写接单信息
+    ORDER_DEAL = 0x0800  # 接受、拒绝普通用户的订单申请
+    BILLBOARD_WORK_CONFIRM = 0x1000  # 申请、拒绝自己作品上热榜
+    SUPER_DESIGNER_APPLY = 0x2000  # 申请成为特约设计师
+    ADMIN = 0x4000  # 管理员
 
 
 class Role(db.Model):
     __tablename__ = 'role'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(30))
+    name = db.Column(db.String(30), unique=True)
     permission = db.Column(db.Integer)
+
+    def __str__(self):
+        return self.name
 
 
 followers = db.Table('followers',
@@ -40,6 +69,12 @@ class User(db.Model):
                                backref=db.backref('followers', lazy='dynamic'),
                                lazy='dynamic')
 
+    def __init__(self, **kwargs):
+        super(User, self).__init__(**kwargs)
+        if self.role is None:
+            # 如果用户角色为空，默认设置用户角色为普通用户
+            self.role = Role.query.filter_by(permission=0x03ff).first()
+
     def follow(self, user):
         if not self.is_following(user) and user != self:
             self.followed.append(user)
@@ -54,14 +89,26 @@ class User(db.Model):
         return self.followed.filter(followers.c.followed_id == user.id).count() > 0
 
     def followed_works(self, cls):
+        """
+        按时间倒序获取当前用户关注的用户所发布的作品
+        """
         return cls.query.join(followers, (followers.c.followed_id == cls.author_id)).filter(
             followers.c.follower_id == self.id).order_by(cls.upload_time.desc())
 
     def is_designer(self):
         return self.role_id == 2
 
-    def is_admin(self):
+    def is_super_designer(self):
         return self.role_id == 3
+
+    def is_admin(self):
+        return self.role_id == 4
+
+    def can(self, permission):
+        """
+        判断用户是否具有某项权限
+        """
+        return self.role is None and (self.role.permission & permission) == permission
 
     def __str__(self):
         return self.name
@@ -154,6 +201,7 @@ class Picture(db.Model):
     # 点击量，每一个视频被请求详情时这个数加一
     clicks = db.Column(db.Integer)
 
+
 class Video(db.Model):
     __tablename__ = 'video'
 
@@ -169,6 +217,7 @@ class Video(db.Model):
     author = db.relationship('User', backref='videos')
     # 点击量，每一个视频被请求详情时这个数加一
     clicks = db.Column(db.Integer)
+
 
 class ShowCase(db.Model):
     __tablename__ = 'showcase'
@@ -195,6 +244,7 @@ class Order(db.Model):
     all_price = db.Column(db.Numeric(scale=2))
     status = db.Column(db.Integer)
     created_time = db.Column(db.DateTime, default=datetime.utcnow)
+
 
 class TimeText(db.Model):
     Time = db.Column(db.DateTime, primary_key=True)
