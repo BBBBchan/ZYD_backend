@@ -50,7 +50,12 @@ def picture_detail(picture_id):
         result['had_star'] = True
     result['star_count'] = StarPicture.query.filter_by(content_id=picture_id).count()
     result['comment_count'] = CommentPicture.query.filter_by(content_id=picture_id).count()
+
+    picture.clicks = picture.clicks + 1
+    db.session.add(picture)
+    db.session.commit()
     return jsonify(result)
+
 
 # 上传图片
 @picture.route('/upload_picture')
