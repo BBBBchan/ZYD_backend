@@ -4,7 +4,7 @@ from app.models import db
 from flask_login import LoginManager
 from .user.views import user_blueprint
 from .video import video_blueprint
-from .picture.views import picture_blueprint
+from .picture import picture_blueprint
 from .showCase.views import showcase_blueprint
 from .order.views import order_blueprint
 from .comment.views import comment_blueprint
