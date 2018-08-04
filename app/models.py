@@ -202,7 +202,7 @@ class Picture(db.Model):
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     author = db.relationship('User', backref='pictures')
     # 点击量，每一个视频被请求详情时这个数加一
-    clicks = db.Column(db.Integer)
+    clicks = db.Column(db.Integer, default = 0)
 
 
 class Video(db.Model):
