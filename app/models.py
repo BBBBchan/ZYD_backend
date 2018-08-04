@@ -12,6 +12,7 @@ class Permission:
     设计师Designer:            0x3fff
     特约设计师SuperDesigner:    0x1fff
     管理员Admin:                0x7fff
+    封禁用户Banned:              0x0000
     """
     NAME_MODIFY = 0x0001  # 修改昵称
     AVATAR_MODIFY = 0x0002  # 修改头像
@@ -28,6 +29,7 @@ class Permission:
     BILLBOARD_WORK_CONFIRM = 0x1000  # 申请、拒绝自己作品上热榜
     SUPER_DESIGNER_APPLY = 0x2000  # 申请成为特约设计师
     ADMIN = 0x4000  # 管理员
+    BANNED = 0x0000  # 封禁用户
 
 
 class Role(db.Model):
@@ -62,6 +64,7 @@ class User(db.Model):
     tag = db.Column(db.String(30))
     pricing = db.Column(db.Numeric(scale=2))
     last_login = db.Column(db.DateTime, default=datetime.utcnow)
+    created_time = db.Column(db.DateTime, default=datetime.utcnow)
 
     followed = db.relationship('User', secondary=followers,
                                primaryjoin=(followers.c.follower_id == id),
@@ -76,12 +79,12 @@ class User(db.Model):
             self.role = Role.query.filter_by(permission=0x03ff).first()
 
     def follow(self, user):
-        if not self.is_following(user) and user != self:
+        if not self.is_following(user):
             self.followed.append(user)
             return self
 
     def unfollow(self, user):
-        if self.is_following(user) and user != self:
+        if self.is_following(user):
             self.followed.remove(user)
             return self
 
@@ -238,8 +241,8 @@ class Order(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.String(50))
-    customer = db.Column(db.Integer, db.ForeignKey('user.id'))
-    seller = db.Column(db.Integer, db.ForeignKey('user.id'))
+    customer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    seller_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     requirements = db.Column(db.Text)
     all_price = db.Column(db.Numeric(scale=2))
     status = db.Column(db.Integer)
@@ -248,3 +251,52 @@ class Order(db.Model):
 
 class TimeText(db.Model):
     Time = db.Column(db.DateTime, primary_key=True)
+
+
+class ReportMessage(db.Model):
+    """
+    用户举报消息--主要发往后台
+    """
+    __tablename__ = 'report_message'
+    id = db.Column(db.Integer, primary_key=True)
+    # 举报原因
+    reason = db.Column(db.String(100))
+    # 举报者
+    reporter_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    reporter = db.relationship('User', backref='report_messages')
+    # 被举报者
+    reported_id = db.Column(db.Integer)
+    reported = db.relationship('User')
+    created_time = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class ApplyMessage(db.Model):
+    """
+    用户申请消息--主要发往后台
+    """
+    __tablename__ = 'apply_message'
+    id = db.Column(db.Integer, primary_key=True)
+    # 申请人
+    applicant_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    applicant = db.relationship('User', 'apply_messages')
+    # 申请类型
+    apply_type = db.Column(db.String(30))
+    created_time = db.Column(db.DateTime, default=datetime.utcnow)
+    # 申请详情
+    detail = db.Column(db.Text)
+
+
+class PushMessage(db.Model):
+    """
+    向用户推送的消息
+    """
+    __tablename__ = 'push_message'
+    id = db.Column(db.Integer, primary_key=True)
+    # 接收者
+    receiver_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    receiver = db.relationship('User', backref='pull_messages')
+    content = db.Column(db.Text)
+    created_time = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+

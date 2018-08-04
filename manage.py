@@ -31,7 +31,8 @@ def create_roles():
         'Admin': Permission.NAME_MODIFY | Permission.AVATAR_MODIFY | Permission.COMMENT | Permission.SHARE |
         Permission.REPORT | Permission.ORDER_SUBMIT | Permission.FOLLOW | Permission.DESIGNER_APPLY |
         Permission.WORK_MANAGE | Permission.SHOWCASE_MANAGE | Permission.ORDER_RECEIVED_WRITE | Permission.ORDER_DEAL |
-        Permission.BILLBOARD_WORK_CONFIRM | Permission.SUPER_DESIGNER_APPLY | Permission.ADMIN
+        Permission.BILLBOARD_WORK_CONFIRM | Permission.SUPER_DESIGNER_APPLY | Permission.ADMIN,
+        'Banned': Permission.BANNED
     }
     for r in roles:
         role = Role.query.filter_by(name=r).first()
