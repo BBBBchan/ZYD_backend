@@ -1,8 +1,9 @@
-from flask import request, current_app, jsonify
-from flask_login import login_required
+from flask import request, jsonify
 from sqlalchemy import extract
-from ..models import *
+
+from app.middlewares import checkLogin
 from . import video_blueprint
+from ..models import *
 
 
 @video_blueprint.route('/')
@@ -15,25 +16,24 @@ def no_login():
     return 'no login', 401
 
 
-
-@login_required
+@checkLogin
 @video_blueprint.route('/video_list', methods=['GET', 'POST'])
 def video_list():
     request_data = request.json
     print(request_data)
-    page_count = request_data.get('pagecount',10)
-    page = request_data.get('page',1)
+    page_count = request_data.get('pagecount', 10)
+    page = request_data.get('page', 1)
     type = request_data.get('query_type')
     if type == None:
         return jsonify({'message': 'no type'}), 400
     if type == 'user_id':
         author_id = request_data.get('query_key')
-        re = Video.query.filter_by(author_id = author_id).all()
+        re = Video.query.filter_by(author_id=author_id).all()
         result = []
-        for i in range(page_count * page-1,page_count * page):
+        for i in range(page_count * page - 1, page_count * page):
             try:
                 video_info = {
-                    'video_id':re[i].id,
+                    'video_id': re[i].id,
                     'video_name': re[i].name,
                     'video_url': re[i].url,
                     'video_type': re[i].category.name,
@@ -48,15 +48,15 @@ def video_list():
         return jsonify(result)
     if type == 'type':
         query_key = request_data.get('query_key')
-        category = Category.query.filter_by(name = query_key).first()
+        category = Category.query.filter_by(name=query_key).first()
         if category is None:
             return jsonify({'message': 'no category'}), 404
-        re = Video.query.filter_by(category_id = category.id).all()
+        re = Video.query.filter_by(category_id=category.id).all()
         result = []
-        for i in range(page_count * page-1,page_count * page):
+        for i in range(page_count * page - 1, page_count * page):
             try:
                 video_info = {
-                    'video_id':re[i].id,
+                    'video_id': re[i].id,
                     'video_name': re[i].name,
                     'video_url': re[i].url,
                     'video_type': re[i].category.name,
@@ -73,7 +73,7 @@ def video_list():
     query_re = None
     if type == 'year':
         query_key = request_data.get('query_key')
-        query_re = Video.query.filter(extract("year",Video.upload_time)==query_key).all()
+        query_re = Video.query.filter(extract("year", Video.upload_time) == query_key).all()
     elif type == 'month':
         query_key = request_data.get('query_key')
         query_re = Video.query.filter(extract("month", Video.upload_time) == query_key).all()
@@ -84,9 +84,9 @@ def video_list():
         startime = request_data.get('query_key').get('starday')
         endtime = request_data.get('query_key').get('endday')
         if startime is not None and endtime is not None:
-            star = datetime.strftime(startime,"%Y-%m-%d")
+            star = datetime.strftime(startime, "%Y-%m-%d")
             end = datetime.strftime(endtime, '%Y-%m-%d')
-            query_re = Video.query.filter(Video.upload_time.betwwen(star,end)).all()
+            query_re = Video.query.filter(Video.upload_time.betwwen(star, end)).all()
     if len(query_re) > 0:
         result = []
         for i in range(page_count * page - 1, page_count * page):
@@ -109,8 +109,8 @@ def video_list():
         return jsonify(result)
 
 
-@login_required
-@video_blueprint.route('/upload_video', methods=['GET','POST'])
+@checkLogin
+@video_blueprint.route('/upload_video', methods=['GET', 'POST'])
 def upload_video():
     upload_data = request.json
     user_id = upload_data.get('user_id')
@@ -118,10 +118,10 @@ def upload_video():
     video_url = upload_data.get('video_url')
     video_type = upload_data.get('type')
     if user_id is None or video_name is None \
-        or video_url is None or video_type is None:
+            or video_url is None or video_type is None:
         return jsonify({'message': 'argument missing'}), 403
-    category = Category.query.filter_by(name = video_type).first()
-    author = User.query.filter_by(id = user_id).first()
+    category = Category.query.filter_by(name=video_type).first()
+    author = User.query.filter_by(id=user_id).first()
     if category is None and author is None:
         return 404
     new_Video = Video(name=video_name, url=video_url,

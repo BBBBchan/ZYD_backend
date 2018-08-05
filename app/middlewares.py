@@ -5,6 +5,11 @@ from app.models import User
 
 
 def checkLogin(f):
+    """
+    装饰器，用来进行用户认证
+    若认证成功，则将当前用户附加在全局变量g.user上
+    若认证失败，则返回状态码403
+    """
     @wraps(f)
     def decorated_function(*args, **kwargs):
         try:
