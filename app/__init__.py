@@ -1,13 +1,15 @@
 import os
+
 from flask import Flask
+
 from app.models import db
-from .user.views import user_blueprint
-from .video import video_blueprint
+from .admin.views import admin_blueprint
+from .comment.views import comment_blueprint
+from .order.views import order_blueprint
 from .picture.views import picture_blueprint
 from .showCase.views import showcase_blueprint
-from .order.views import order_blueprint
-from .comment.views import comment_blueprint
-from .admin.views import admin_blueprint
+from .user.views import user_blueprint
+from .video import video_blueprint
 
 
 def create_app(object_name):

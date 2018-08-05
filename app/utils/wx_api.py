@@ -1,4 +1,4 @@
-from app.config import APP_ID, APP_SECRET, REDIS_HOST, REDIS_PORT, REDIS_DB
+from app.config import APP_ID, APP_SECRET, REDIS_HOST, REDIS_PORT, REDIS_DB, logger
 import requests
 import redis
 import uuid
@@ -18,8 +18,8 @@ def get_session_key_and_openid(code):
                        'appid={APP_ID}&secret={SECRET}&js_code={CODE}&grant_type=authorization_code'
                        .format(APP_ID=APP_ID, SECRET=APP_SECRET, CODE=code))
     data = req.json()
-    session_key = data['session_key']
-    openid = data['openid']
+    session_key = data.get('session_key')
+    openid = data.get('openid')
     return session_key, openid
 
 
