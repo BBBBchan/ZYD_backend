@@ -153,6 +153,8 @@ class Picture(db.Model):
     author = db.relationship('User', backref='pictures')
     # 点击量，每一个视频被请求详情时这个数加一
     clicks = db.Column(db.Integer, default = 0)
+    # 分享数，用户分享一次加一
+    shares_count = db.Column(db.Integer,default=0)
 
 class Video(db.Model):
     __tablename__ = 'video'
