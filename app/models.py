@@ -154,8 +154,8 @@ class CommentVideo(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    observer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    observer = db.relationship('User')
+    commentator_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    commentator = db.relationship('User')
 
     context = db.Column(db.Text)
 
