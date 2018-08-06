@@ -1,13 +1,11 @@
-import datetime
-import json
-
 from flask import Blueprint, request, jsonify, abort, g
 
 from app.middlewares import checkLogin
 from app.models import User, db, ReportMessage, ApplyMessage
 from app.utils.serializers import serializer, save_or_not
-from app.utils.utils import upload_avatar, upload_avatar_v1
-from app.utils.wx_api import get_session_key_and_openid, generate_3rd_session, update_token, redis_service
+from app.utils.utils import upload_avatar, upload_avatar_v1, db_handler
+from app.utils.wx_api import get_session_key_and_openid, generate_3rd_session, update_token
+from app.config import logger
 
 user_blueprint = Blueprint('user_blueprint', __name__)
 
@@ -18,10 +16,13 @@ def login():
 
     try:
         code = data['code']
-    except:
+    except Exception as e:
+        logger.error(e)
         abort(400)
 
     session_key, openid = get_session_key_and_openid(code)
+    if session_key is None or openid is None:
+        return abort(400)
 
     try:
         user = User.query.filter_by(openid=openid).first()
@@ -31,17 +32,13 @@ def login():
     if not user:
         # user为空，说明为新用户，获取其信息录入数据库
         try:
-            name = data['nickName']
-            avatar = request.files['avatar']
-            url = upload_avatar_v1(avatar)
-            user = User(openid=openid, name=name, avatarUrl=url)
-            db.session.add(user)
-            db.session.commit()
-            # 让用户成为他自己的粉丝
-            db.session.add(user.follow(user))
-            db.session.commit()
-        except:
+            user = User(openid=openid)
+        except Exception as e:
+            logger.error(e)
             abort(500)
+        db_handler(user)
+        # 让用户成为他自己的粉丝
+        db_handler(user.follow(user))
 
     token = generate_3rd_session(session_key, openid)
 
@@ -53,7 +50,7 @@ def generate_new_token():
     """
     更新用户token
     """
-    token = request.headers['Authorization']
+    token = request.headers.get('Authorization')
     if not token:
         abort(400)
     new_token = update_token(token)
@@ -64,18 +61,19 @@ def generate_new_token():
 def get_user_info(uid):
     user = User.query.get_or_404(uid)
 
-    extra_dict = {
-        'followed': '/user/followed/list/',
-        'followers': '/user/followers/list/',
-        'works': '/picture/list/',
-        'showcases': '/showcase/list/',
-        'orders': '/order/list/'
-    }
-
     if user.is_designer():
-        data = serializer(user, ['id', 'name', 'avatarUrl', 'tag', 'pricing', 'last_login', 'role'], extra_dict)
+        data = serializer(user, ['id', 'name', 'avatarUrl', 'tag', 'last_login'])
     else:
-        data = serializer(user, ['id', 'name', 'avatarUrl', 'last_login', 'role'], extra_dict)
+        data = serializer(user, ['id', 'name', 'avatarUrl', 'last_login'])
+
+    data.update({'role': str(user.role),
+                 'pricing': str(user.pricing),
+                 'followed': 'user/followed/list/',
+                 'followers': '/user/followers/list/',
+                 'pictures': '/user/{uid}/picture/list/'.format(uid=user.id),
+                 'showcases': '/user/{uid}/showcase/list/'.format(uid=user.id),
+                 'orders': '/user/{uid}/order/list/'.format(uid=user.id)})
+
     return jsonify({'data': data}), 200
 
 
@@ -88,7 +86,7 @@ def change_user_info():
         save_or_not(user, ['name', 'tag', 'pricing'], data)
     else:
         save_or_not(user, ['name'], data)
-    return jsonify({'msg': 'OK', 'uid': user.id}), 200
+    return jsonify({'message': '修改用户信息成功', 'uid': user.id}), 200
 
 
 @user_blueprint.route('/avatar_v1/', methods=['POST'])
@@ -132,15 +130,14 @@ def change_avatar():
 
 @user_blueprint.route('/relationship/<uid>/', methods=['GET'])
 @checkLogin
-def follow(uid):
+def follow_or_unfollow(uid):
     received_user = User.query.get_or_404(uid)
     if g.user.is_following(received_user):
         g.user.unfollow(received_user)
     else:
         g.user.follow(received_user)
-    db.session.add(g.user)
-    db.session.commit()
-    return jsonify({'msg': 'OK'}), 200
+    db_handler(g.user)
+    return jsonify({'message': '操作成功'}), 200
 
 
 @user_blueprint.route('/followed/list/', methods=['GET'])
@@ -159,35 +156,20 @@ def followers_list():
     return jsonify({'data': data}), 200
 
 
-"""
-@user_blueprint.route('/auto_report/<uid>/', methods=['GET'])
-@checkLogin
-def auto_report(uid):
-    user = User.query.get_or_404(uid)
-    count = redis_service.incr('report-' + str(user.id))
-    if count > 3:
-        user.is_banned = True
-        db.session.add(user)
-        db.session.commit()
-    return jsonify({'msg': 'OK'}), 200
-"""
-
-
 @user_blueprint.route('/report/<uid>/', methods=['POST'])
 @checkLogin
 def report(uid):
-    try:
-        reason = request.json['reason']
-    except:
+    reason = request.json.get('reason')
+    if not reason:
         abort(400)
     reported_user = User.query.get_or_404(uid)
     try:
         report_message = ReportMessage(reason=reason, reported=reported_user, reporter=g.user)
-        db.session.add(report_message)
-        db.session.commit()
     except Exception as e:
-        return jsonify({'error': e}), 500
-    return jsonify({'msg': 'OK'}), 200
+        logger.error(e)
+        abort(500)
+    db_handler(report_message)
+    return jsonify({'message': '举报成功'}), 200
 
 
 @user_blueprint.route('/apply/', methods=['GET'])
@@ -195,7 +177,8 @@ def report(uid):
 def apply():
     try:
         detail = request.json['detail']
-    except:
+    except Exception as e:
+        logger.error(e)
         abort(400)
     user = g.user
     if user.is_designer():
@@ -205,9 +188,9 @@ def apply():
     else:
         return jsonify({'error': '您已经是特约设计师了，无需再进行申请'}), 404
     try:
-        apply_message = ApplyMessage(applicant=user, detail=detail)
-        db.session.add(apply_message)
-        db.session.commit()
+        apply_message = ApplyMessage(applicant=user, detail=detail, apply_type=apply_type)
     except Exception as e:
-        return jsonify({'error': e}), 500
+        logger.error(e)
+        abort(500)
+    db_handler(apply_message)
     return jsonify({'msg': 'OK'}), 200

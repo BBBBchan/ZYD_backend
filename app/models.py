@@ -183,9 +183,6 @@ class CommentPicture(db.Model):
 
     created_time = db.Column(db.DateTime, default=datetime.utcnow)
 
-    parent_id = db.Column(db.Integer, db.ForeignKey('comment_picture.id'), default=None)
-    parent = db.relationship('CommentPicture', uselist=False)
-
 
 class Picture(db.Model):
     __tablename__ = 'picture'
@@ -245,7 +242,7 @@ class Order(db.Model):
     seller_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     requirements = db.Column(db.Text)
     all_price = db.Column(db.Numeric(scale=2))
-    status = db.Column(db.Integer)
+    status = db.Column(db.Integer)  # 0 未完成 1 已完成
     created_time = db.Column(db.DateTime, default=datetime.utcnow)
 
 
@@ -278,7 +275,7 @@ class ApplyMessage(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     # 申请人
     applicant_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    applicant = db.relationship('User', 'apply_messages')
+    applicant = db.relationship('User', backref='apply_messages')
     # 申请类型
     apply_type = db.Column(db.String(30))
     created_time = db.Column(db.DateTime, default=datetime.utcnow)

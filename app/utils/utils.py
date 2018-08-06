@@ -1,4 +1,8 @@
 import requests
+from app.models import db
+from app.config import logger
+from flask import abort
+import datetime
 
 
 def upload_avatar(file):
@@ -26,3 +30,12 @@ def upload_avatar_v1(file):
     url = 'http://127.0.0.1:5000' + url_for("static", filename="avatar/{}".format(file.filename))
     return url
 
+
+def db_handler(instance):
+    try:
+        db.session.add(instance)
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.error(e)
+        abort(500)
