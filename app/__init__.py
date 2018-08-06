@@ -1,23 +1,25 @@
 import os
+
 from flask import Flask
+
 from app.models import db
-from flask_login import LoginManager
+from .admin.views import admin_blueprint
+from .comment.views import comment_blueprint
+from .order.views import order_blueprint
+from .picture import picture_blueprint
 from .user.views import user_blueprint
 from .video import video_blueprint
 from .picture import picture_blueprint
 from .showCase.views import showcase_blueprint
-from .order.views import order_blueprint
-from .comment.views import comment_blueprint
-from .admin.views import admin_blueprint
+from .user.views import user_blueprint
+from .video import video_blueprint
 
-login_manager = LoginManager()
 
 def create_app(object_name):
     app = Flask(__name__)
     app.config.from_object(object_name)
 
     db.init_app(app)
-    login_manager.init_app(app)
 
     app.register_blueprint(user_blueprint, url_prefix='/user')
     app.register_blueprint(video_blueprint, url_prefix='/video')
