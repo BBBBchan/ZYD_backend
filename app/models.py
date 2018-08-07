@@ -183,6 +183,14 @@ class CommentPicture(db.Model):
 
     created_time = db.Column(db.DateTime, default=datetime.utcnow)
 
+class HotOrder(db.Model):
+    """
+    热度榜的数据库，方便后台管理
+    """
+    __tablename__ = 'hot_order'
+    id = db.Column(db.Integer,primary_key=True)
+    picture_id = db.Column(db.Integer,db.ForeignKey('picture.id'))
+    order = db.Column(db.Integer,index=True)
 
 class Picture(db.Model):
     __tablename__ = 'picture'
@@ -203,6 +211,7 @@ class Picture(db.Model):
     # 分享数
     share_count = db.Column(db.Integer,default=0)
 
+    hotorder = db.relationship('HotOrder',backref='picture',lazy='dynamic')
 
 class Video(db.Model):
     __tablename__ = 'video'
