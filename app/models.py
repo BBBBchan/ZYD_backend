@@ -72,6 +72,7 @@ class User(db.Model):
                                backref=db.backref('followers', lazy='dynamic'),
                                lazy='dynamic')
 
+    author = db.relationship('Picture', backref='author', lazy='dynamic')
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
         if self.role is None:
@@ -123,7 +124,14 @@ class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(10))
     description = db.Column(db.Text)
+    category = db.relationship('Picture', backref='category', lazy='dynamic')
 
+# 标签表
+class Tag(db.Model):
+    __tablename__ = 'tags'
+    id = db.Column(db.Integer, primary_key=True,index=True)
+    name = db.Column(db.String(64))
+    tag = db.relationship('Picture', backref='tag',lazy='dynamic')
 
 class StarVideo(db.Model):
     __tablename__ = 'star_video'
@@ -201,17 +209,20 @@ class Picture(db.Model):
     upload_time = db.Column(db.DateTime, default=datetime.utcnow)
     showcase_id = db.Column(db.Integer, db.ForeignKey('showcase.id'))
 
+    # 类型id
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
-    category = db.relationship('Category', backref='pictures')
+
+    # 标签id
+    tag_id = db.Column(db.Integer, db.ForeignKey('tags.id'))
 
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    author = db.relationship('User', backref='pictures')
+
     # 点击量，每一个视频被请求详情时这个数加一
     clicks = db.Column(db.Integer, default = 0)
     # 分享数
     share_count = db.Column(db.Integer,default=0)
 
-    hotorder = db.relationship('HotOrder',backref='picture',lazy='dynamic')
+
 
 class Video(db.Model):
     __tablename__ = 'video'
