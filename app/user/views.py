@@ -67,7 +67,6 @@ def get_user_info(uid):
     data.update({'role': str(user.role),
                  'followed': '/user/followed/list/',
                  'followers': '/user/followers/list/'})
-
     if g.user == user:
         data.update({'orders': '/order/list/'})
 
@@ -201,3 +200,4 @@ def apply():
         abort(500)
     db_handler(apply_message)
     return jsonify({'message': '操作成功'}), 200
+

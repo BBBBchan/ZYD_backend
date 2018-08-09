@@ -71,6 +71,8 @@ class User(db.Model):
                                backref=db.backref('followers', lazy='dynamic'),
                                lazy='dynamic')
 
+    pictures = db.relationship('Picture', backref='author', lazy='dynamic')
+
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
         if self.role is None:
@@ -122,7 +124,14 @@ class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(10))
     description = db.Column(db.Text)
+    category = db.relationship('Picture', backref='category', lazy='dynamic')
 
+# 标签表
+class Tag(db.Model):
+    __tablename__ = 'tags'
+    id = db.Column(db.Integer, primary_key=True,index=True)
+    name = db.Column(db.String(64))
+    tag = db.relationship('Picture', backref='tag',lazy='dynamic')
 
 class StarVideo(db.Model):
     __tablename__ = 'star_video'
@@ -183,6 +192,16 @@ class CommentPicture(db.Model):
     created_time = db.Column(db.DateTime, default=datetime.utcnow)
 
 
+class HotOrder(db.Model):
+    """
+    热度榜的数据库，方便后台管理
+    """
+    __tablename__ = 'hot_order'
+    id = db.Column(db.Integer,primary_key=True)
+    picture_id = db.Column(db.Integer,db.ForeignKey('picture.id'))
+    order = db.Column(db.Integer,index=True)
+
+
 class Picture(db.Model):
     __tablename__ = 'picture'
 
@@ -192,13 +211,18 @@ class Picture(db.Model):
     upload_time = db.Column(db.DateTime, default=datetime.utcnow)
     showcase_id = db.Column(db.Integer, db.ForeignKey('showcase.id'))
 
+    # 类型id
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
-    category = db.relationship('Category', backref='pictures')
+
+    # 标签id
+    tag_id = db.Column(db.Integer, db.ForeignKey('tags.id'))
 
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    author = db.relationship('User', backref='pictures')
+
     # 点击量，每一个视频被请求详情时这个数加一
     clicks = db.Column(db.Integer, default = 0)
+    # 分享数
+    share_count = db.Column(db.Integer,default=0)
 
 
 class Video(db.Model):
@@ -236,6 +260,14 @@ class Order(db.Model):
     __tablename__ = 'order'
 
     id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.String(50))
+    customer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    seller_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    requirements = db.Column(db.Text)
+    all_price = db.Column(db.Numeric(scale=2))
+    status = db.Column(db.Integer)  # 0 未完成 1 已完成
+    created_time = db.Column(db.DateTime, default=datetime.utcnow)
+
     customer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     seller_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     status = db.Column(db.Integer, default=0)  # 0 未完成 1 已接受 2 已取消
@@ -289,6 +321,7 @@ class ApplyMessage(db.Model):
     status = db.Column(db.Boolean, default=False)  # False 未处理， True 已处理
 
 
+
 class PushMessage(db.Model):
     """
     向用户推送的消息
@@ -325,5 +358,4 @@ class OrderExtra(db.Model):
     is_solve_eat = db.Column(db.Boolean)  # 是否解决饮食
     order_id = db.Column(db.Integer, db.ForeignKey('order.id'))
     order = db.relationship('Order', backref='item', uselist=False)
-
 

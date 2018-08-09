@@ -44,11 +44,19 @@ def create_roles():
     db.session.commit()
 
 
+# 创建一个空的作品类型
+def create_null_category():
+    null_category = Category(id=1,name='no_name',description='No any category')
+    db.session.add(null_category)
+    db.session.commit()
+
+
 @manager.shell
 def make_shell_context():
     return dict(app=app, db=db, role=Role, user=User, category=Category, picture=Picture, video=Video, order=Order,
                 star_video=StarVideo, star_picture=StarPicture, showcase=ShowCase,
-                comment_video=CommentVideo, comment_picture=CommentPicture, create_roles=create_roles)
+                comment_video=CommentVideo, comment_picture=CommentPicture, create_roles=create_roles,
+                create_null_category=create_null_category)
 
 
 if __name__ == '__main__':
