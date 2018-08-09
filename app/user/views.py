@@ -1,7 +1,7 @@
 from flask import request, jsonify, abort, g
 
 from app.middlewares import checkLogin
-from app.models import User, db, ReportMessage, ApplyMessage
+from app.models import User, ReportMessage, ApplyMessage
 from app.user import user_blueprint
 from app.utils.serializers import serializer, save_or_not
 from app.utils.utils import upload_avatar_v1, db_handler

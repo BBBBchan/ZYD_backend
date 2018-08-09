@@ -16,3 +16,7 @@ Enter shell:
 Create Roles:
 
 > 5.create_roles()
+
+Record Log:
+
+> Create file /log/app.log at root path of project

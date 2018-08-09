@@ -126,12 +126,14 @@ class Category(db.Model):
     description = db.Column(db.Text)
     category = db.relationship('Picture', backref='category', lazy='dynamic')
 
+
 # 标签表
 class Tag(db.Model):
     __tablename__ = 'tags'
     id = db.Column(db.Integer, primary_key=True,index=True)
     name = db.Column(db.String(64))
     tag = db.relationship('Picture', backref='tag',lazy='dynamic')
+
 
 class StarVideo(db.Model):
     __tablename__ = 'star_video'
@@ -260,14 +262,6 @@ class Order(db.Model):
     __tablename__ = 'order'
 
     id = db.Column(db.Integer, primary_key=True)
-    order_id = db.Column(db.String(50))
-    customer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    seller_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    requirements = db.Column(db.Text)
-    all_price = db.Column(db.Numeric(scale=2))
-    status = db.Column(db.Integer)  # 0 未完成 1 已完成
-    created_time = db.Column(db.DateTime, default=datetime.utcnow)
-
     customer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     seller_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     status = db.Column(db.Integer, default=0)  # 0 未完成 1 已接受 2 已取消
@@ -319,7 +313,6 @@ class ApplyMessage(db.Model):
     # 申请详情
     detail = db.Column(db.Text)
     status = db.Column(db.Boolean, default=False)  # False 未处理， True 已处理
-
 
 
 class PushMessage(db.Model):

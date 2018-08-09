@@ -25,17 +25,6 @@ def get_apply_list():
     return jsonify({'data': data, 'count': pagination.total, 'total_pages': pagination.pages}), 200
 
 
-@admin_blueprint.route('/apply/list/', methods=['GET'])
-def get_apply_list():
-    try:
-        apply_list = ApplyMessage.query.all().order_by(ApplyMessage.created_time.desc())
-    except Exception as e:
-        logger.error(e)
-        return jsonify({'message': '获取申请列表失败'}), 500
-    data = [serializer(instance, ['applicant_id', 'applicant', 'created_time', 'detail']) for instance in apply_list]
-    return jsonify({'data': data}), 200
-
-
 @admin_blueprint.route('/apply/<uid>/', methods=['GET'])
 def apply_manage(uid):
     is_passed = request.json.get('is_passed')
