@@ -24,7 +24,8 @@ def picture_list():
             'picture_name': all_picture[i].name,
             'picture_url': all_picture[i].url,
             'author_id': all_picture[i].author_id,
-            'author_name': all_picture[i].author.name
+            'author_name': all_picture[i].author.name,
+            'tag_name': all_picture[i].tag.name
         }
         result.append(re)
     return jsonify(result)
@@ -38,9 +39,14 @@ def picture_detail(picture_id):
         return jsonify({'message': 'no picture'}), 404
     result = {'picture_id': picture.id,
               'picture_name': picture.name,
-              'authot_id': picture.author_id,
+              'author_id': picture.author_id,
               "author_name": picture.author.name,
-              'upload_time': picture.upload_time
+              'upload_time': picture.upload_time,
+              'share_count' : picture.share_count,
+              'category_id': picture.category_id,
+              'category_name': picture.category.name,
+              'tag_id': picture.tag_id,
+              'tag_name': picture.tag.name
               }
     user = g.user
     if StarPicture.query.filter_by(
@@ -50,7 +56,6 @@ def picture_detail(picture_id):
         result['had_star'] = True
     result['star_count'] = StarPicture.query.filter_by(content_id=picture_id).count()
     result['comment_count'] = CommentPicture.query.filter_by(content_id=picture_id).count()
-
     picture.clicks = picture.clicks + 1
     db.session.add(picture)
     db.session.commit()
@@ -58,7 +63,7 @@ def picture_detail(picture_id):
 
 
 # 上传图片
-@picture.route('/upload_picture')
+@picture.route('/upload_picture',methods=['POST','GET'])
 @checkLogin
 def upload_picture():
     data = request.json
@@ -68,17 +73,19 @@ def upload_picture():
     if picture_expend is None:
         return jsonify({'message': 'data missing'}), 401
     picture_url = data.get('picture_url',None)
-    picture_type = data.get('picture_type')
+    picture_type = data.get('picture_type_id')
+    picture_tag = data.get('picture_tag_id')
     if picture_type is None:
         return jsonify({'message':'no type'}), 401
-    type = Category.query.filter_by(name=picture_type).first()
-    if type is None:
+    type = Category.query.filter_by(id=picture_type).first()
+    tag = Tag.query.filter_by(id=picture_tag).first()
+    if type is None or tag is None:
         return jsonify({'message': 'can not find this type'}), 404
     if picture_url is None:
         picture_url = 'https://'+ OSS_OPEN_IP + picture_name + picture_expend
     user = User.query.filter_by(id=user_id).first()
-    newPic = Picture(name=picture_name,url=picture_url,category_id=type.id,
-                     category=type,author_id=user_id,author=user)
+    newPic = Picture(name=picture_name,url=picture_url,
+                     category=type,author=user,tag= tag)
     try:
         db.session.add(newPic)
         db.session.commit()
@@ -144,7 +151,7 @@ def star(picture_id):
 
 
 # 修改图片信息
-@picture.route('/change_info')
+@picture.route('/change_info', methods=['GET','POST'])
 @checkLogin
 def change_info():
     data = request.json
@@ -156,16 +163,52 @@ def change_info():
             return jsonify({'message': 'no picture'}), 404
         else:
             picture_name = data.get('picture_name',picture.name)
-            picture_type = data.get('picture_type')
+            picture_type = data.get('picture_type_id')
+            picture_tag = data.get('picture_tag_id')
             if picture_type is not None:
-                new_type = Category.query.filter_by(name=picture_type).first()
+                new_type = Category.query.filter_by(id=picture_type).first()
                 if new_type is None:
                     return jsonify({'message': 'no type'}), 404
-                picture.name=picture_name
                 picture.category = new_type
-                picture.category_id = new_type.id
-                db.session.add(picture)
-                db.session.commit()
+            if picture_tag is not None:
+                new_tag = Tag.query.filter_by(id=picture_tag).first()
+                if new_tag is None:
+                    return jsonify({'message': 'no tag'}), 404
+                picture.tag = new_tag
+            picture.name=picture_name
+            db.session.add(picture)
+            db.session.commit()
     except:
         db.session.rollback()
         return jsonify({'message':'data miss'}), 401
+
+# 记录分享数
+@picture.route('/share/<picture_id>')
+@checkLogin
+def share(picture_id):
+    picture = Picture.query.filter_by(id=picture_id)
+    if picture is None:
+        return jsonify({'message':'no picture'}), 404
+    picture.share_count = picture.share_count + 1
+    db.session.add(picture)
+    db.session.commit()
+    return jsonify({'message': 'share successful'}),200
+
+
+# 获得类型列表
+@picture.route('/category_list')
+@checkLogin
+def category_list():
+    all_categorys = Category.query.all()
+    result = [{'id': category.id,'name':category.name,'description': category.description}
+              for category in all_categorys]
+    return jsonify(result)
+
+# 获得标签列表
+@picture.route('/tag_list')
+@checkLogin
+def tag_list():
+    all_tags = Tag.query.all()
+    result = [{'id':tag.id,'name':tag.name}
+              for tag in all_tags]
+    return jsonify(result)
