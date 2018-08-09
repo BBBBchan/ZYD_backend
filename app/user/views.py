@@ -1,23 +1,20 @@
-from flask import Blueprint, request, jsonify, abort, g
+from flask import request, jsonify, abort, g
 
 from app.middlewares import checkLogin
 from app.models import User, db, ReportMessage, ApplyMessage
+from app.user import user_blueprint
 from app.utils.serializers import serializer, save_or_not
-from app.utils.utils import upload_avatar, upload_avatar_v1, db_handler
+from app.utils.utils import upload_avatar_v1, db_handler
 from app.utils.wx_api import get_session_key_and_openid, generate_3rd_session, update_token
 from app.config import logger
-
-user_blueprint = Blueprint('user_blueprint', __name__)
 
 
 @user_blueprint.route('/login/', methods=['POST'])
 def login():
     data = request.json
 
-    try:
-        code = data['code']
-    except Exception as e:
-        logger.error(e)
+    code = data.get('code')
+    if code is None:
         abort(400)
 
     session_key, openid = get_session_key_and_openid(code)
@@ -29,7 +26,7 @@ def login():
     except:
         user = None
 
-    if not user:
+    if user is None:
         # user为空，说明为新用户，获取其信息录入数据库
         try:
             user = User(openid=openid)
@@ -51,28 +48,27 @@ def generate_new_token():
     更新用户token
     """
     token = request.headers.get('Authorization')
-    if not token:
+    if token is None:
         abort(400)
     new_token = update_token(token)
     return jsonify({'token': new_token}), 200
 
 
 @user_blueprint.route('/<uid>/', methods=['GET'])
+@checkLogin
 def get_user_info(uid):
     user = User.query.get_or_404(uid)
 
-    if user.is_designer():
+    if user.is_designer() or user.is_super_designer():
         data = serializer(user, ['id', 'name', 'avatarUrl', 'tag', 'last_login'])
     else:
         data = serializer(user, ['id', 'name', 'avatarUrl', 'last_login'])
 
     data.update({'role': str(user.role),
-                 'pricing': str(user.pricing),
-                 'followed': 'user/followed/list/',
-                 'followers': '/user/followers/list/',
-                 'pictures': '/user/{uid}/picture/list/'.format(uid=user.id),
-                 'showcases': '/user/{uid}/showcase/list/'.format(uid=user.id),
-                 'orders': '/user/{uid}/order/list/'.format(uid=user.id)})
+                 'followed': '/user/followed/list/',
+                 'followers': '/user/followers/list/'})
+    if g.user == user:
+        data.update({'orders': '/order/list/'})
 
     return jsonify({'data': data}), 200
 
@@ -83,7 +79,7 @@ def change_user_info():
     data = request.json
     user = g.user
     if user.is_designer():
-        save_or_not(user, ['name', 'tag', 'pricing'], data)
+        save_or_not(user, ['name', 'tag'], data)
     else:
         save_or_not(user, ['name'], data)
     return jsonify({'message': '修改用户信息成功', 'uid': user.id}), 200
@@ -108,24 +104,15 @@ def avatar_v1():
 @checkLogin
 def change_avatar():
     """
-    保存图片至图床
+    保存头像至OSS
     """
-    try:
-        avatar = request.files['avatar']
-    except:
+    avatarUrl = request.json.get('avatarUrl')
+    if avatarUrl is None:
         abort(400)
-    try:
-        url = upload_avatar(avatar.read())
-    except:
-        abort(500)
-    try:
-        g.user.avatarUrl = url
-        db.session.add(g.user)
-        db.session.commit()
-    except:
-        abort(500)
+    g.user.avatarUrl = avatarUrl
+    db_handler(g.user)
 
-    return jsonify({'avatarUrl': url}), 200
+    return jsonify({'message': '操作成功'}), 200
 
 
 @user_blueprint.route('/relationship/<uid>/', methods=['GET'])
@@ -143,24 +130,45 @@ def follow_or_unfollow(uid):
 @user_blueprint.route('/followed/list/', methods=['GET'])
 @checkLogin
 def followed_list():
-    followed_user_list = g.user.followed.all()
-    data = [serializer(f, ['id', 'name', 'avatarUrl']) for f in followed_user_list]
-    return jsonify({'data': data}), 200
+    page = request.json.get('page')
+    if page is None:
+        abort(400)
+    followed_count = g.user.followed.count()
+    pagination = g.user.followed.paginate(page, per_page=10, error_out=False)
+    followed_user_list = pagination.items
+    # data = [serializer(f, ['id', 'name', 'avatarUrl']) for f in followed_user_list]
+    data_set = []
+    for f in followed_user_list:
+        data = {"id": f.id, "name": f.name, "avatarUrl": f.avatarUrl, "detail_url": '/user/{}'.format(f.id)}
+        data_set.append(data)
+    return jsonify({'data': data_set, 'count': pagination.total,
+                    'total_pages': pagination.pages, "followed_count": followed_count}), 200
 
 
 @user_blueprint.route('/followers/list/', methods=['GET'])
 @checkLogin
 def followers_list():
-    followers = g.user.followers.all()
-    data = [serializer(f, ['id', 'name', 'avatarUrl']) for f in followers]
-    return jsonify({'data': data}), 200
+    page = request.json.get('page')
+    if page is None:
+        abort(400)
+    follower_count = g.user.followers.count()
+    pagination = g.user.followers.paginate(page, per_page=10, error_out=False)
+    followers = pagination.items
+    # data = [serializer(f, ['id', 'name', 'avatarUrl']) for f in followers]
+    data_set = []
+    for f in followers:
+        data = {"id": f.id, "name": f.name, "avatarUrl": f.avatarUrl,
+                "detail_url": '/user/{}'.format(f.id), "is_followed": g.user.is_following(f)}
+        data_set.append(data)
+    return jsonify({'data': data_set, 'count': pagination.total,
+                    'total_pages': pagination.pages, 'follower_count': follower_count}), 200
 
 
 @user_blueprint.route('/report/<uid>/', methods=['POST'])
 @checkLogin
 def report(uid):
     reason = request.json.get('reason')
-    if not reason:
+    if reason is None:
         abort(400)
     reported_user = User.query.get_or_404(uid)
     try:
@@ -172,13 +180,11 @@ def report(uid):
     return jsonify({'message': '举报成功'}), 200
 
 
-@user_blueprint.route('/apply/', methods=['GET'])
+@user_blueprint.route('/apply/', methods=['POST'])
 @checkLogin
 def apply():
-    try:
-        detail = request.json['detail']
-    except Exception as e:
-        logger.error(e)
+    detail = request.json.get('detail')
+    if detail is None:
         abort(400)
     user = g.user
     if user.is_designer():
@@ -193,4 +199,5 @@ def apply():
         logger.error(e)
         abort(500)
     db_handler(apply_message)
-    return jsonify({'msg': 'OK'}), 200
+    return jsonify({'message': '操作成功'}), 200
+

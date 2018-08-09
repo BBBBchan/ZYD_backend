@@ -15,6 +15,7 @@ manager.add_command('db', MigrateCommand)
 def create_roles():
     """
     创建角色表
+    shell里运行create_roles创建角色
     """
     roles = {
         'User': Permission.NAME_MODIFY | Permission.AVATAR_MODIFY | Permission.COMMENT | Permission.SHARE |
@@ -41,6 +42,7 @@ def create_roles():
             role.permission = roles[r]
             db.session.add(role)
     db.session.commit()
+
 
 # 创建一个空的作品类型
 def create_null_category():
