@@ -1,20 +1,6 @@
-import requests
-from app.models import db
+from app.models import db, PushMessage
 from app.config import logger
-from flask import abort
-import datetime
-
-
-def upload_avatar(file):
-    """
-    上传图片至图床
-    :param file: 图片文件对象
-    :return: url: 图床url
-    """
-    upload_api = 'https://sm.ms/api/upload'
-    files = {'smfile': file}
-    req = requests.post(upload_api, files=files)
-    return req.json()['data']['url']
+from flask import abort, request
 
 
 def upload_avatar_v1(file):
@@ -39,3 +25,31 @@ def db_handler(instance):
         db.session.rollback()
         logger.error(e)
         abort(500)
+
+
+def message_confirm(cls):
+    msg_id = request.json.get('msg_id')
+    if msg_id is None:
+        abort(400)
+    message = cls.query.get_or_404(msg_id)
+    message.status = True
+    db_handler(message)
+
+
+def set_value_from_request(instance, data, args):
+    for arg in args:
+        temp = data.get(arg)
+        if temp is None:
+            abort(400)
+            break
+        setattr(instance, arg, temp)
+    db_handler(instance)
+
+
+def push_message_to_user(receiver_id, content):
+    try:
+        message = PushMessage(receiver_id=receiver_id, content=content)
+    except Exception as e:
+        logger.error(e)
+        abort(500)
+    db_handler(message)
