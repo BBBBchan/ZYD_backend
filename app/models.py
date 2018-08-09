@@ -62,7 +62,6 @@ class User(db.Model):
     role = db.relationship('Role', backref='users')
 
     tag = db.Column(db.String(30))
-    pricing = db.Column(db.Numeric(scale=2))
     last_login = db.Column(db.DateTime, default=datetime.utcnow)
     created_time = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -237,13 +236,18 @@ class Order(db.Model):
     __tablename__ = 'order'
 
     id = db.Column(db.Integer, primary_key=True)
-    order_id = db.Column(db.String(50))
     customer_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     seller_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    requirements = db.Column(db.Text)
-    all_price = db.Column(db.Numeric(scale=2))
-    status = db.Column(db.Integer)  # 0 未完成 1 已完成
+    status = db.Column(db.Integer, default=0)  # 0 未完成 1 已接受 2 已取消
     created_time = db.Column(db.DateTime, default=datetime.utcnow)
+
+    type = db.Column(db.String(30))  # 订单类型 photo / post / design
+    time = db.Column(db.DateTime)  # 拍摄时间
+    content = db.Column(db.Text)  # 拍摄内容
+    thinking = db.Column(db.Text)  # 拍摄思路
+    requirements = db.Column(db.Text)  # 需求
+    is_take_deposit = db.Column(db.Boolean)  # 是否交定金
+    customer_weixin = db.Column(db.String(50))  # 顾客微信号
 
 
 class TimeText(db.Model):
@@ -265,6 +269,7 @@ class ReportMessage(db.Model):
     reported_id = db.Column(db.Integer)
     reported = db.relationship('User')
     created_time = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.Boolean, default=False)  # False 未处理， True 已处理
 
 
 class ApplyMessage(db.Model):
@@ -281,6 +286,7 @@ class ApplyMessage(db.Model):
     created_time = db.Column(db.DateTime, default=datetime.utcnow)
     # 申请详情
     detail = db.Column(db.Text)
+    status = db.Column(db.Boolean, default=False)  # False 未处理， True 已处理
 
 
 class PushMessage(db.Model):
@@ -295,5 +301,29 @@ class PushMessage(db.Model):
     content = db.Column(db.Text)
     created_time = db.Column(db.DateTime, default=datetime.utcnow)
 
+
+class Notification(db.Model):
+    """
+    系统公告
+    """
+    __tablename__ = 'notification'
+    id = db.Column(db.Integer, primary_key=True)
+    content = db.Column(db.Text)
+    created_time = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class OrderExtra(db.Model):
+    """
+    订单详细条目
+    """
+    __tablename__ = 'order_extra'
+    id = db.Column(db.Integer, primary_key=True)
+    gender = db.Column(db.Boolean)  # 性别
+    age = db.Column(db.Integer)  # 年龄
+    location = db.Column(db.String(100))  # 拍摄位置
+    late_protocol = db.Column(db.String(100))  # 迟到协议
+    is_solve_eat = db.Column(db.Boolean)  # 是否解决饮食
+    order_id = db.Column(db.Integer, db.ForeignKey('order.id'))
+    order = db.relationship('Order', backref='item', uselist=False)
 
 

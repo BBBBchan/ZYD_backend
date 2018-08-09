@@ -1,7 +1,7 @@
 # ZYD_backend
 This is a backend project for wxapp Zhongyidian.
 
-Database Init:
+## Database Init
 
 > 1.python manage.py db init
 
@@ -12,3 +12,7 @@ Enter shell:
 > 3.python manage.py shell
 
 > 4.db.create_all()
+
+Create Roles:
+
+> 5.create_roles()
