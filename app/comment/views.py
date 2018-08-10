@@ -42,19 +42,21 @@ def comment_modify():
 	pic_id = data.get('pic_id')
 	comment_detail = data.get('comment_detail')
 
-	comment = CommentPicture.query.filter_by(id=comment_id,content_id=pic_id,commentator_id=user_id).first()
 	try:	
-		if len(comment) == 0:
-			return jsonify({'message':'未找到相应评论'}),400
-		elif comment.context == comment_detail:
+		comment = CommentPicture.query.filter_by(id=comment_id,content_id=pic_id,commentator_id=user_id).first()
+		if comment.context == comment_detail:
 			return jsonify({'message':'评论内容未修改'}),401
 		else:
 			comment.context = comment_detail
-			db.session.commit()
-			return jsonify({'message':'评论成功'})
+			try:
+				db.session.commit()
+				return jsonify({'message':'修改评论成功'})
+			except:
+				dn.session.rollback()
+				return jsonify({'message':'修改评论失败'})
 	except:
 		db.session.rollback()
-		return jsonify({'message':'修改失败'}),404
+		return jsonify({'message':'获取评论失败'}),400
 
 #删除评论
 @comment_blueprint.route('/comment_delete', methods=['GET','POST'])						
@@ -65,17 +67,18 @@ def comment_delete():
 	user_id = data.get('user_id')
 	pic_id = data.get('pic_id')
 
-	comment = CommentPicture.query.filter_by(id=comment_id, content_id=pic_id, commentator_id=user_id).first()
-	try:
-		if len(comment) == None:
-			return jsonify({'message':'未找到相应评论'}), 400
-		else:
+	try:	
+		comment = CommentPicture.query.filter_by(id=comment_id, content_id=pic_id, commentator_id=user_id).first()
+		try:
 			db.session.delete(comment)
 			db.session.commit()
 			return jsonify({'message':'删除成功'})
+		except:
+			db.session.rollback()
+			return jsonify({'message':'删除失败'}),400
 	except:
 		db.session.rollback()
-		return jsonify({'message':'删除失败'}),404
+		return jsonify({'message':'获取评论失败'}),401
 
 #添加评论
 @comment_blueprint.route('/comment_upload', methods=['POST'])							
@@ -92,8 +95,16 @@ def comment_upload():
 	if comment_detail == None:
 		return jsonify({'message':'评论内容不能为空'}),402	
 	comment_time = str(datetime.now())
-	user = User.query.filter_by(id=user_id).first()
-	picture =Picture.query.filter_by(id=pic_id).first()
+	try:
+		user = User.query.filter_by(id=user_id).first()
+	except:
+		db.session.rollback()
+		return jsonify({'message':'用户不存在'}),403
+	try:
+		picture =Picture.query.filter_by(id=pic_id).first()
+	except:
+		db.session.rollback()
+		return jsonify({'message':'未找到相应图片'}),404
 	new_comment = CommentPicture(commentator=user, context=comment_detail, content=picture, created_time=comment_time)
 	try:
 		db.session.add(new_comment)
@@ -101,4 +112,4 @@ def comment_upload():
 		return jsonify({'message':'成功添加评论'})
 	except:
 		db.session.rollback()
-		return jsonify({'message':'评论失败'}),404 
+		return jsonify({'message':'评论失败'}),405

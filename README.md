@@ -5,7 +5,7 @@ This is a backend project for wxapp Zhongyidian.
 
 > 1.python manage.py db init
 
-> 2.python manage.py db.migrate
+> 2.python manage.py db migrate
 
 Enter shell:
 
@@ -16,3 +16,7 @@ Enter shell:
 Create Roles:
 
 > 5.create_roles()
+
+Record Log:
+
+> Create file /log/app.log at root path of project

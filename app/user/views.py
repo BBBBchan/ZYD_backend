@@ -1,7 +1,7 @@
 from flask import request, jsonify, abort, g
 
 from app.middlewares import checkLogin
-from app.models import User, db, ReportMessage, ApplyMessage
+from app.models import User, ReportMessage, ApplyMessage
 from app.user import user_blueprint
 from app.utils.serializers import serializer, save_or_not
 from app.utils.utils import upload_avatar_v1, db_handler
@@ -65,10 +65,10 @@ def get_user_info(uid):
         data = serializer(user, ['id', 'name', 'avatarUrl', 'last_login'])
 
     data.update({'role': str(user.role),
-                 'followed': '/user/followed/list/',
-                 'followers': '/user/followers/list/'})
+                 'followed': 'http://123.207.160.62/api/user/followed/list/',
+                 'followers': 'http://123.207.160.62/api/user/followers/list/'})
     if g.user == user:
-        data.update({'orders': '/order/list/'})
+        data.update({'orders': 'http://123.207.160.62/api/order/list/'})
 
     return jsonify({'data': data}), 200
 
@@ -139,7 +139,8 @@ def followed_list():
     # data = [serializer(f, ['id', 'name', 'avatarUrl']) for f in followed_user_list]
     data_set = []
     for f in followed_user_list:
-        data = {"id": f.id, "name": f.name, "avatarUrl": f.avatarUrl, "detail_url": '/user/{}'.format(f.id)}
+        data = {"id": f.id, "name": f.name, "avatarUrl": f.avatarUrl,
+                "detail_url": 'http://123.207.160.62/api/user/{}/'.format(f.id)}
         data_set.append(data)
     return jsonify({'data': data_set, 'count': pagination.total,
                     'total_pages': pagination.pages, "followed_count": followed_count}), 200
@@ -158,7 +159,7 @@ def followers_list():
     data_set = []
     for f in followers:
         data = {"id": f.id, "name": f.name, "avatarUrl": f.avatarUrl,
-                "detail_url": '/user/{}'.format(f.id), "is_followed": g.user.is_following(f)}
+                "detail_url": 'http://123.207.160.62/api/user/{}/'.format(f.id), "is_followed": g.user.is_following(f)}
         data_set.append(data)
     return jsonify({'data': data_set, 'count': pagination.total,
                     'total_pages': pagination.pages, 'follower_count': follower_count}), 200
