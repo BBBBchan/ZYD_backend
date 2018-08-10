@@ -17,9 +17,11 @@ def comment_list():
 	
 	if pic_id == None or user_id == None:							
 		return jsonify({'message':'用户或图片信息不能为空'}), 400
-	comment_all = CommentPicture.query.filter_by(content_id = pic_id).all()
-	if len(comment_all) == 0:
-		return jsonify({'message':'未找到相应评论'}), 404
+	try:
+		comment_all = CommentPicture.query.filter_by(content_id = pic_id).all()
+	except:
+		db.session.rollback()
+		return jsonify({'message':'获取评论失败'}),401
 	res = []
 	for i in range(page_count*(page_num-1),page_count*page_num):
 		comment = {
@@ -86,6 +88,7 @@ def comment_delete():
 def comment_upload():
 	data = request.json
 	user_id = data.get('user_id')
+	
 	if user_id == None:
 		return jsonify({'message':'用户名不能为空'}),400
 	pic_id = data.get('pic_id')
@@ -95,6 +98,7 @@ def comment_upload():
 	if comment_detail == None:
 		return jsonify({'message':'评论内容不能为空'}),402	
 	comment_time = str(datetime.now())
+	
 	try:
 		user = User.query.filter_by(id=user_id).first()
 	except:
@@ -105,6 +109,7 @@ def comment_upload():
 	except:
 		db.session.rollback()
 		return jsonify({'message':'未找到相应图片'}),404
+	
 	new_comment = CommentPicture(commentator=user, context=comment_detail, content=picture, created_time=comment_time)
 	try:
 		db.session.add(new_comment)
