@@ -21,13 +21,13 @@ def create_app(object_name):
 
     db.init_app(app)
 
-    app.register_blueprint(user_blueprint, url_prefix='/user')
-    app.register_blueprint(video_blueprint, url_prefix='/video')
-    app.register_blueprint(picture_blueprint, url_prefix='/picture')
-    app.register_blueprint(showcase_blueprint, url_prefix='/showcase')
-    app.register_blueprint(order_blueprint, url_prefix='/order')
-    app.register_blueprint(comment_blueprint, url_prefix='/comment')
-    app.register_blueprint(admin_blueprint, url_prefix='/admin')
+    app.register_blueprint(user_blueprint, url_prefix='/api/user')
+    app.register_blueprint(video_blueprint, url_prefix='/api/video')
+    app.register_blueprint(picture_blueprint, url_prefix='/api/picture')
+    app.register_blueprint(showcase_blueprint, url_prefix='/api/showcase')
+    app.register_blueprint(order_blueprint, url_prefix='/api/order')
+    app.register_blueprint(comment_blueprint, url_prefix='/api/comment')
+    app.register_blueprint(admin_blueprint, url_prefix='/api/admin')
 
     return app
 

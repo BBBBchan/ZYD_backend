@@ -5,7 +5,7 @@ This is a backend project for wxapp Zhongyidian.
 
 > 1.python manage.py db init
 
-> 2.python manage.py db.migrate
+> 2.python manage.py db migrate
 
 Enter shell:
 
