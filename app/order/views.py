@@ -36,7 +36,7 @@ def generate_user_order():
                                                  'requirements', 'is_take_deposit', 'customer_weixin'])
 
     # 向设计师发送消息
-    return jsonify({'id': new_order.id, 'detail_url': '/order/{}/'.format(new_order.id)}), 200
+    return jsonify({'id': new_order.id, 'detail_url': 'http://123.207.160.62/api/order/{}/'.format(new_order.id)}), 200
 
 
 @order_blueprint.route('/list/', methods=['GET'])
@@ -67,7 +67,7 @@ def get_user_orders():
                 'seller_id': order.seller_id,
                 'status': order.status,
                 'created_time': order.created_time,
-                'detail_url': '/order/{}/'.format(order.id)}
+                'detail_url': 'http://123.207.160.62/api/order/{}/'.format(order.id)}
         data_set.append(data)
     return jsonify({'data': data_set, 'count': pagination.total, 'total_pages': pagination.pages}), 200
 
