@@ -27,6 +27,7 @@ APP_SECRET = '3ced46fd7e962e3eb92a82fa7348ef44'
 REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
 REDIS_DB = 1
+REDIS_PASSWORD = 'root'
 
 path = path.join(path.dirname(path.abspath(__file__)), 'logger.conf')
 logging.config.fileConfig(path)

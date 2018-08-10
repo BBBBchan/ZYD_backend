@@ -1,11 +1,11 @@
-from app.config import APP_ID, APP_SECRET, REDIS_HOST, REDIS_PORT, REDIS_DB, logger
+from app.config import APP_ID, APP_SECRET, REDIS_HOST, REDIS_PORT, REDIS_DB, REDIS_PASSWORD
 import requests
 import redis
 import uuid
 
 
 redis_service = redis.StrictRedis(host=REDIS_HOST, port=REDIS_PORT,
-                                  db=REDIS_DB, decode_responses=True)
+                                  db=REDIS_DB, decode_responses=True, password=REDIS_PASSWORD)
 
 
 def get_session_key_and_openid(code):
