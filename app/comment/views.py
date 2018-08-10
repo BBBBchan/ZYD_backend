@@ -22,7 +22,7 @@ def comment_list():
 	except:
 		db.session.rollback()
 		return jsonify({'message':'获取评论失败'}),401
-	res = []
+	res = {}
 	for i in range(page_count*(page_num-1),page_count*page_num):
 		comment = {
 			'comment_id':comment_all[i].id,
