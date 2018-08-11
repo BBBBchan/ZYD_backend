@@ -1,4 +1,4 @@
-from app.config import APP_ID, APP_SECRET, REDIS_HOST, REDIS_PORT, REDIS_DB, logger
+from app.config import APP_ID, APP_SECRET, REDIS_HOST, REDIS_PORT, REDIS_DB
 import requests
 import redis
 import uuid

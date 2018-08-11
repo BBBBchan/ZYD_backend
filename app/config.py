@@ -1,6 +1,6 @@
 import logging.config
 from os import path
-
+from datetime import datetime
 
 class Config(object):
     pass
@@ -20,9 +20,18 @@ class DevConfig(object):
 OSS_OPEN_IP = 'sereph.oss-cn-beijing.aliyuncs.com'
 OSS_end_point = 'oss-cn-beijing.aliyuncs.com'
 
+
+# 头像oss
+AVATAR_OPEN_IP = 'zyd-avatar.oss-cn-beijing.aliyuncs.com'
+AVATAR_END_POINT = 'oss-cn-beijing.aliyuncs.com'
+
+# 服务器上线时间
+base_time = datetime(2018,8,13,0,0)
+
 # 微信小程序配置
 APP_ID = 'wxdea953f5e8d0c0d6'
 APP_SECRET = '3ced46fd7e962e3eb92a82fa7348ef44'
+
 
 REDIS_HOST = 'localhost'
 REDIS_PORT = 6379

@@ -124,7 +124,8 @@ class Category(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(10))
     description = db.Column(db.Text)
-    category = db.relationship('Picture', backref='category', lazy='dynamic')
+    pictures = db.relationship('Picture', backref='category', lazy='dynamic')
+
 
 
 # 标签表
@@ -225,6 +226,9 @@ class Picture(db.Model):
     clicks = db.Column(db.Integer, default = 0)
     # 分享数
     share_count = db.Column(db.Integer,default=0)
+
+    # 是否是后台认定的推荐内容
+    isrecommend = db.Column(db.Boolean, default=False)
 
 
 class Video(db.Model):

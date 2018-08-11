@@ -13,7 +13,7 @@ def create_showcase():
 	if user_id == None:
 		return jsonify({'message':'获取用户id失败'}),400
 	showcase_name = data.get('showcase_name')
-	if shocase_name == None:
+	if showcase_name == None:
 		return jsonify({'message':'获取作品集名称失败'}),401
 	showcase_description = data.get('showcase_description')
 	if showcase_description == None:
@@ -21,10 +21,10 @@ def create_showcase():
 	pic_num = data.get('pic_num')
 	if pic_num == None:
 		return jsonify({'message':'获取图片数量失败'}),403
-	all_pic_id = data.get('all_pic_id')
 	elif pic_num == 0:
 		return jsonify({'message':'未选择图片'}),404
-	
+
+	all_pic_id = data.get('all_pic_id')
 	all_pic = []
 	for i in range(0,pic_num):
 		try:
@@ -35,7 +35,7 @@ def create_showcase():
 			return jsonify({'message':'未找到图片'}),405
 	
 	created_time = str(datetime.now())
-	new_showcase = Showcase(name=showcase_name,description=showcase_description,created_time=created_time,author_id=user_id,pictures=all_pic)
+	new_showcase = ShowCase(name=showcase_name,description=showcase_description,created_time=created_time,author_id=user_id,pictures=all_pic)
 	try:
 		db.session.add(new_showcase)
 		db.session.commit()
@@ -45,10 +45,10 @@ def create_showcase():
 		return jsonify({'message':'创建失败'}),406
 
 #删除整个作品集
-@showcase_blueprint.route('/showcase_delete/<showcase_id:int>', methods=['GET','POST'])
+@showcase_blueprint.route('/showcase_delete/<showcase_id>', methods=['GET','POST'])
 @checkLogin
 def showcase_delete(showcase_id):
-	showcase = Showcase.query.filter_by(id=showcase_id).first()
+	showcase = ShowCase.query.filter_by(id=showcase_id).first()
 	try:
 		db.session.delete(showcase)
 		return jsonify({'message':'删除成功'})
@@ -68,7 +68,7 @@ def showcase_list():
 	page_num = data.get('page_num',1)
 	
 	try:
-		all_showcase = Showcase.query.filter_by(author_id=user_id).all()
+		all_showcase = ShowCase.query.filter_by(author_id=user_id).all()
 		if len(all_showcase) == 0:
 			return jsonify({'message':'作品集数量为0'}),402
 		res = {}
@@ -106,7 +106,7 @@ def add_pic():
 	if all_pic_id == None:
 		return jsonify({'message':'获取图片id失败'}),404
 	try:
-		showcase = Showcase.query.filter_by(id=showcase_id).first()
+		showcase = ShowCase.query.filter_by(id=showcase_id).first()
 	except:
 		db.session.rollback()
 		return jsonify({'message':'获取作品集失败'}),405
@@ -146,7 +146,7 @@ def delete_pic():
 		return jsonify({'message':'获取图片id失败'}),404
 
 	try:
-		showcase = Showcase.query.filter_by(id=showcase_id).first()
+		showcase = ShowCase.query.filter_by(id=showcase_id).first()
 		for i in range(0,pic_num):
 			for j in range(0,len(showcase.pictures)):
 				if all_pic_id[i] == showcase.pictures[j].id:
@@ -161,13 +161,13 @@ def delete_pic():
 		return jsonify({'message','获取作品集失败'}),405
 
 #获取作品集详情
-@showcase_blueprint.route('/showcase_detail/<showcase_id:int>', methods=['GET', 'POST'])
+@showcase_blueprint.route('/showcase_detail/<showcase_id>', methods=['GET', 'POST'])
 @checkLogin
-def showcase_detail():
+def showcase_detail(showcase_id):
 	try:
-		showcase = Showcase.query.filter_by(id=showcase_id).first()
+		showcase = ShowCase.query.filter_by(id=showcase_id).first()
 		res = {
-			'showcase_id': showcase.id
+			'showcase_id': showcase.id,
 			'showcase_name': showcase.name,
 			'showcase_description': showcase.description,
 			'showcase_created_time': showcase.created_time,
@@ -191,13 +191,13 @@ def showcase_detail():
 
 		}
 		try:
-			had_star = StarPicture.query.filter_by(user_id=user_id,content_id=picture.id).first()
+			had_star = StarPicture.query.filter_by(content_id=picture.id).first()
 			if had_star == None:
 				pic['had_star'] = False
 			else:
 				pic['had_star'] = True
 			pic['star_count'] = StarPicture.query.filter_by(content_id=picture.id).count()
-			pic['comment_count'] = StarPicture.query.filter_by(content_id=picture.id).count()
+			pic['comment_count'] = CommentPicture.query.filter_by(content_id=picture.id).count()
 			all_pic[i] = pic
 		except:
 			db.session.rollback()
@@ -217,15 +217,15 @@ def showcase_modify():
 	if showcase_id == None:
 		return jsonify({'message':'获取作品集id失败'}),401
 	showcase_name = data.get('showcase_name')
-	if shocase_name == None:
+	if showcase_name == None:
 		return jsonify({'message':'获取作品集名称失败'}),402
 	showcase_description = data.get('showcase_description')
 	if showcase_description == None:
 		return jsonify({'message':'获取作品集描述失败'}),403
 
 	try:
-		showcase = Showcase.query.filter_by(id=showcase_id,author_id=user_id).first()
-		if shocase_name == showcase.name and showcase_description == showcase.description:
+		showcase = ShowCase.query.filter_by(id=showcase_id,author_id=user_id).first()
+		if showcase_name == showcase.name and showcase_description == showcase.description:
 			return jsonify({'message':'未修改任何内容'}),405
 		else:
 			showcase.name = showcase_name
