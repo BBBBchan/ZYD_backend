@@ -190,7 +190,7 @@ class CommentPicture(db.Model):
     context = db.Column(db.Text)
 
     content_id = db.Column(db.Integer, db.ForeignKey('picture.id'))
-    content = db.relationship('Picture', backref='comments', lazy='dynamic')
+    content = db.relationship('Picture', backref='comments')
 
     created_time = db.Column(db.DateTime, default=datetime.utcnow)
 
