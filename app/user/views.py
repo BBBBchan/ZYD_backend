@@ -39,7 +39,8 @@ def login():
 
     token = generate_3rd_session(session_key, openid)
 
-    return jsonify({'token': token, 'uid': user.id}), 200
+    return jsonify({'token': token, 'uid': user.id,
+                    'detail_url': 'http://123.207.160.62/api/user/{}/'.format(user.id)}), 200
 
 
 @user_blueprint.route('/token/', methods=['GET'])

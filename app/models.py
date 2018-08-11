@@ -127,6 +127,7 @@ class Category(db.Model):
     pictures = db.relationship('Picture', backref='category', lazy='dynamic')
 
 
+
 # 标签表
 class Tag(db.Model):
     __tablename__ = 'tags'
