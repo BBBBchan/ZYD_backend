@@ -13,7 +13,7 @@ def create_showcase():
 	if user_id == None:
 		return jsonify({'message':'获取用户id失败'}),400
 	showcase_name = data.get('showcase_name')
-	if shocase_name == None:
+	if showcase_name == None:
 		return jsonify({'message':'获取作品集名称失败'}),401
 	showcase_description = data.get('showcase_description')
 	if showcase_description == None:

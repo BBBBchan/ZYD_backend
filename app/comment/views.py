@@ -63,7 +63,7 @@ def comment_modify():
 				db.session.commit()
 				return jsonify({'message':'修改评论成功'})
 			except:
-				dn.session.rollback()
+				db.session.rollback()
 				return jsonify({'message':'修改评论失败'}),406
 	except:
 		db.session.rollback()
@@ -124,7 +124,7 @@ def comment_upload():
 	except:
 		db.session.rollback()
 		return jsonify({'message':'未找到相应图片'}),404
-	
+
 	new_comment = CommentPicture(commentator=user, context=comment_detail, content=picture, created_time=comment_time)
 	try:
 		db.session.add(new_comment)

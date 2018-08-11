@@ -68,7 +68,11 @@ def picture_detail(picture_id):
 def upload_picture():
     data = request.json
     user_id = data.get('user_id',g.user.id)
-    picture_name = data.get('picture_name','No name')
+    picture_name = data.get('picture_name')
+    if picture_name is None:
+        return jsonify({'message':'must have name'}), 401
+    if Picture.query.filter_by(name=picture_name).first() is not None:
+        return jsonify({'message': 'name had be used'}), 401
     picture_expend = data.get('picture_expend')
     if picture_expend is None:
         return jsonify({'message': 'data missing'}), 401
