@@ -31,7 +31,7 @@ def picture_list():
     return jsonify(result)
 
 # 获取图片详情
-@picture.route('/picture_detail/<picture_id>')
+@picture.route('/picture_detail/<int:picture_id>')
 @checkLogin
 def picture_detail(picture_id):
     picture = Picture.query.filter_by(id=picture_id).first()
@@ -100,7 +100,7 @@ def upload_picture():
 
 
 # 删除图片
-@picture.route('/delete_picture/<picture_id>')
+@picture.route('/delete_picture/<int:picture_id>')
 @checkLogin
 def delete_picture(picture_id):
     picture = Picture.query.filter_by(id=picture_id).first()
@@ -126,7 +126,7 @@ def delete_picture(picture_id):
 
 
 #图片点赞/取消点赞
-@picture.route('/star/<picture_id>')
+@picture.route('/star/<int:picture_id>')
 @checkLogin
 def star(picture_id):
     had_star= StarPicture.query.filter_by(
@@ -187,7 +187,7 @@ def change_info():
         return jsonify({'message':'data miss'}), 401
 
 # 记录分享数
-@picture.route('/share/<picture_id>')
+@picture.route('/share/<int:picture_id>')
 @checkLogin
 def share(picture_id):
     picture = Picture.query.filter_by(id=picture_id)
