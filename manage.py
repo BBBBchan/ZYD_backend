@@ -54,7 +54,7 @@ def create_null_category():
 @manager.shell
 def make_shell_context():
     return dict(app=app, db=db, role=Role, user=User, category=Category, picture=Picture, video=Video, order=Order,
-                star_video=StarVideo, star_picture=StarPicture, showcase=ShowCase,
+                star_video=StarVideo, star_picture=StarPicture, showcase=ShowCase, tag=Tag,
                 comment_video=CommentVideo, comment_picture=CommentPicture, create_roles=create_roles,
                 create_null_category=create_null_category)
 
