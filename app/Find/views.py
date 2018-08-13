@@ -78,38 +78,21 @@ def delete_category(category_id):
 @find.route('/recommend/<int:page>')
 @checkLogin
 def recommend(page):
-    all_picture = Picture.query.all()
-    pictures = {}
-    request_time = datetime.now()
-    for picture in all_picture:
-        # 计算热度
-        score = math.log((0.3*picture.clicks+0.2*picture.stars.count()
-                      + 0.3*picture.comments.count() + 0.2*picture.share_count)/4)+(
-                request_time-config.base_time).seconds/36000
-        pictures[picture.id] = score
-    # 根据热度排序
-    temp_result = sorted(pictures.items(),key=lambda e:e[1], reverse=True)
-    temp = dict(temp_result).keys()
-    if len(temp) > 20*page:
-        temp = temp[20*(page-1):20*page]
-    elif len(temp) > 20 * (page-1):
-        temp = temp[20*(page-1):]
-    elif len(temp) < 20*(page-1):
-        return jsonify({'no more picture'}), 404
-    hot = Picture.query.filter(Picture.id.in_(temp)).all()
-    special_picture = Picture.query.filter_by(iscommend=True).all()
-    # 返回编辑推荐和热度前20
-    re = special_picture + hot
+    hot_pictures = HotOrder.query.all()
+    pic_ids = []
+    for pic in hot_pictures[10*(page-1):10*page]:
+        pic_ids.append(pic.picture_id)
+    pictures = Picture.query.filter(Picture.id.in_(pic_ids)).all()
     result = []
-    for r in re:
-        temp_r = {'id':r.id,
-                  'picture_name':r.name,
-                  'url': r.url,
-                  'author_id': r.author_id,
-                  'author_name': r.author.name
-                  }
-        result.append(temp_r)
-
+    for picture in pictures:
+        re = {
+            'id':picture.id,
+            'name':picture.name,
+            'url':picture.url,
+            'author_id':picture.author_id,
+            'author_name': picture.author.name
+        }
+        result.append(re)
     return jsonify(result)
 
 # 类型feed页面,
@@ -132,11 +115,11 @@ def type_recommend():
         hot_cate[picture.id] = score
     temp_result = sorted(hot_cate.items(), key=lambda e: e[1], reverse=True)
     temp = dict(temp_result).keys()
-    if len(temp) > 20*page:
-        temp = temp[20*(page-1):20*page]
-    elif len(temp) > 20 * (page-1):
-        temp = temp[20*(page-1):]
-    elif len(temp) < 20*(page-1):
+    if len(temp) > 10*page:
+        temp = temp[10*(page-1):10*page]
+    elif len(temp) > 10 * (page-1):
+        temp = temp[10*(page-1):]
+    elif len(temp) < 10*(page-1):
         return jsonify({'no more picture'}), 404
     hot = Picture.query.filter(Picture.id.in_(temp)).all()
     special_picture = Picture.query.filter_by(iscommend=True,category_id=category_id).all()
@@ -166,21 +149,13 @@ def square(page):
             request_picture[pic.id] = (request_time - pic.upload_time).seconds
     temp = sorted(request_picture.items(),key=lambda e:e[1])
     pic_temp = dict(temp).keys()
+    # 按时间计算的图片集
     square_picture = Picture.query.filter(Picture.id.in_(pic_temp)).all()
-    if len(square_picture)< 20 * page:
-        all_picture = Picture.query.all().reverse()
-        # expect_picture = all_picture - all_picture 与 squate_picture 的交集
-        expect_picture = list(set(all_picture).difference(
-            set(all_picture).intersection(set(square_picture))))
-        if len(expect_picture) >= 20* page - len(square_picture):
-            square_picture = square_picture + expect_picture[:20* page - len(square_picture)]
-            square_picture = square_picture[20 * (page - 1):20 * page]
-        else:
-            square_picture = square_picture+expect_picture
-            if len(square_picture) < 20*(page-1):
-                return jsonify({'message': 'no more picture'}), 404
-            else:
-                square_picture = square_picture[20*(page-1):]
+    HotOrder = Picture.query.all()
+    try:
+        square_picture = square_picture[7*(page-1):7*page] + HotOrder[3*(page-1):3*page]
+    except:
+        return jsonify({'message':'no more picture'}), 404
     result = []
     for picture in square_picture:
         re = {'id': picture.id,

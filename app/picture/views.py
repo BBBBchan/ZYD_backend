@@ -104,6 +104,8 @@ def upload_picture():
 @checkLogin
 def delete_picture(picture_id):
     picture = Picture.query.filter_by(id=picture_id).first()
+    if g.user.id != picture.author_id:
+        return jsonify({'message':'only author can delete'})
     all_stars = StarPicture.query.filter_by(content_id=picture_id).all()
     all_comments = CommentPicture.query.filter_by(content_id=picture_id).all()
     try:
@@ -160,6 +162,10 @@ def star(picture_id):
 def change_info():
     data = request.json
     user_id = data.get('user_id', g.user.id)
+    if User.query.filter_by(id=user_id).first() is None:
+        return jsonify({'message':'no user'}), 404
+    if g.user.id != user_id:
+        return jsonify({'message':'only author can change'}), 401
     picture_id = data.get('picture_id')
     try:
         picture = Picture.query.filter_by(id=picture_id,author_id=user_id).first()
