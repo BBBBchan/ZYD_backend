@@ -6,7 +6,7 @@ import time,os
 
 def update_hot():
     while True:
-        requests.get('https://design.zhengsj.top/api/find/update_load')
+        requests.get('https://design.zhengsj.top/api/find/update_hot')
         time.sleep(5*60)
 
 if __name__=='__main__':
