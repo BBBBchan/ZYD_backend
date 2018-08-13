@@ -47,8 +47,6 @@ def change_category():
         db.session.rollback()
         return jsonify({'message': 'change failure'}), 401
 
-@find.route('/delete_category/<category_id>')
-
 
 @find.route('/delete_category/<category_id>')
 @checkLogin
@@ -77,9 +75,8 @@ def delete_category(category_id):
         return jsonify({'message': 'no permission'})
 
 # 推荐页面
-@find.route('/recommend')
-@checkLogin
-def recommend():
+@find.route('/recommend/<int:page>')
+def recommend(page):
     all_picture = Picture.query.all()
     pictures = {}
     request_time = datetime.now()
@@ -92,8 +89,12 @@ def recommend():
     # 根据热度排序
     temp_result = sorted(pictures.items(),key=lambda e:e[1], reverse=True)
     temp = dict(temp_result).keys()
-    if len(temp) > 20:
-        temp = temp[:20]
+    if len(temp) > 20*page:
+        temp = temp[20*(page-1):20*page]
+    elif len(temp) > 20 * (page-1):
+        temp = temp[20*(page-1):]
+    elif len(temp) < 20*(page-1):
+        return jsonify({'no more picture'}), 404
     hot = Picture.query.filter(Picture.id.in_(temp)).all()
     special_picture = Picture.query.filter_by(iscommend=True).all()
     # 返回编辑推荐和热度前20
@@ -111,9 +112,11 @@ def recommend():
     return jsonify(result)
 
 # 类型feed页面,
-@find.route('/category_recommend/<category_id>')
-@checkLogin
-def type_recommend(category_id):
+@find.route('/category_recommend', methods=['GET','POST'])
+def type_recommend():
+    data = request.json
+    category_id = data.get('category_id')
+    page = data.get('page',1)
     category = Category.query.filter_by(id=category_id).first()
     if category is None:
         return jsonify({'message':'no this category'})
@@ -127,8 +130,12 @@ def type_recommend(category_id):
         hot_cate[picture.id] = score
     temp_result = sorted(hot_cate.items(), key=lambda e: e[1], reverse=True)
     temp = dict(temp_result).keys()
-    if len(temp) >20:
-        temp = temp[:20]
+    if len(temp) > 20*page:
+        temp = temp[20*(page-1):20*page]
+    elif len(temp) > 20 * (page-1):
+        temp = temp[20*(page-1):]
+    elif len(temp) < 20*(page-1):
+        return jsonify({'no more picture'}), 404
     hot = Picture.query.filter(Picture.id.in_(temp)).all()
     special_picture = Picture.query.filter_by(iscommend=True,category_id=category_id).all()
     # 返回编辑推荐和热度前20
@@ -145,9 +152,9 @@ def type_recommend(category_id):
 
     return jsonify(result)
 
-@find.route('/square')
+@find.route('/square/<int:page>')
 @checkLogin
-def square():
+def square(page):
     user = g.user
     user_followers = user.followed.all()
     request_time = datetime.now()
@@ -157,9 +164,21 @@ def square():
             request_picture[pic.id] = (request_time - pic.upload_time).seconds
     temp = sorted(request_picture.items(),key=lambda e:e[1])
     pic_temp = dict(temp).keys()
-    if len(pic_temp) >=20:
-        pic_temp = pic_temp[:20]
     square_picture = Picture.query.filter(Picture.id.in_(pic_temp)).all()
+    if len(square_picture)< 20 * page:
+        all_picture = Picture.query.all().reverse()
+        # expect_picture = all_picture - all_picture 与 squate_picture 的交集
+        expect_picture = list(set(all_picture).difference(
+            set(all_picture).intersection(set(square_picture))))
+        if len(expect_picture) >= 20* page - len(square_picture):
+            square_picture = square_picture + expect_picture[:20* page - len(square_picture)]
+            square_picture = square_picture[20 * (page - 1):20 * page]
+        else:
+            square_picture = square_picture+expect_picture
+            if len(square_picture) < 20*(page-1):
+                return jsonify({'message': 'no more picture'}), 404
+            else:
+                square_picture = square_picture[20*(page-1):]
     result = []
     for picture in square_picture:
         re = {'id': picture.id,
