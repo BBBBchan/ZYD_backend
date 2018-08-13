@@ -6,7 +6,6 @@ from app.config import *
 
 #  获取图片列表
 @picture.route('/picture_list', methods=['POST', 'GET'])
-@checkLogin
 def picture_list():
     data = request.json
     user_id = data.get('user_id')
@@ -201,7 +200,6 @@ def share(picture_id):
 
 # 获得类型列表
 @picture.route('/category_list')
-@checkLogin
 def category_list():
     all_categorys = Category.query.all()
     result = [{'id': category.id,'name':category.name,'description': category.description}
@@ -210,7 +208,6 @@ def category_list():
 
 # 获得标签列表
 @picture.route('/tag_list')
-@checkLogin
 def tag_list():
     all_tags = Tag.query.all()
     result = [{'id':tag.id,'name':tag.name}

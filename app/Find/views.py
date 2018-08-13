@@ -76,7 +76,6 @@ def delete_category(category_id):
 
 # 推荐页面
 @find.route('/recommend/<int:page>')
-@checkLogin
 def recommend(page):
     all_picture = Picture.query.all()
     pictures = {}
@@ -114,7 +113,6 @@ def recommend(page):
 
 # 类型feed页面,
 @find.route('/category_recommend', methods=['GET','POST'])
-@checkLogin
 def type_recommend():
     data = request.json
     category_id = data.get('category_id')
