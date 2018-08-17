@@ -365,7 +365,7 @@ class BackendUser(db.Model):
     """
     __tablename__ = 'backend_user'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(20), unqiue=True)
+    username = db.Column(db.String(20), unique=True)
     pw_hash = db.Column(db.String(20))
 
     def __init__(self, username, password):
