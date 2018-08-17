@@ -13,6 +13,7 @@ from .picture import picture_blueprint
 from .showCase.views import showcase_blueprint
 from .user.views import user_blueprint
 from .video import video_blueprint
+from .Picture_manage import pictrue_manage_blueprint
 
 
 def create_app(object_name):
@@ -28,6 +29,7 @@ def create_app(object_name):
     app.register_blueprint(order_blueprint, url_prefix='/api/order')
     app.register_blueprint(comment_blueprint, url_prefix='/api/comment')
     app.register_blueprint(admin_blueprint, url_prefix='/api/admin')
+    app.register_blueprint(pictrue_manage_blueprint, url_prefix='/api/picture_manage')
 
     return app
 
