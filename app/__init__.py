@@ -21,6 +21,7 @@ def create_app(object_name):
     app.config.from_object(object_name)
 
     db.init_app(app)
+    db.app = app
     db.create_all()
 
     app.register_blueprint(user_blueprint, url_prefix='/api/user')
