@@ -1,4 +1,4 @@
-from flask import request, abort, jsonify
+from flask import request, abort, jsonify, url_for
 
 from app.config import logger
 from app.middlewares import checkLogin
@@ -36,16 +36,26 @@ def generate_user_order():
                                                  'requirements', 'is_take_deposit', 'customer_weixin'])
 
     # 向设计师发送消息
-    return jsonify({'id': new_order.id, 'detail_url': 'http://123.207.160.62/api/order/{}/'.format(new_order.id)}), 200
+    return jsonify({'id': new_order.id,
+                    'detail_url': url_for('user_blueprint.get_user_order_detail',
+                                          uid=new_order.id, _external=True)}), 200
 
 
 @order_blueprint.route('/list/', methods=['GET'])
 @checkLogin
 def get_user_orders():
+    if g.user.is_admin:
+        # 如果当前用户为管理员，他具有查询用户订单的权限，而普通用户只能查看自己的订单
+        uid = request.json.get('uid')
+        if uid is None:
+            abort(400)
+        user = User.query.get_or_404(uid)
+    else:
+        user = g.user
+
     page = request.json.get('page')
     if page is None:
         abort(400)
-    user = g.user
     if user.is_designer() or user.is_super_designer():
         # 如果用户是设计师, 设计师接收的订单
         pagination = Order.query.filter_by(seller_id=user.id)\
@@ -67,7 +77,7 @@ def get_user_orders():
                 'seller_id': order.seller_id,
                 'status': order.status,
                 'created_time': order.created_time,
-                'detail_url': 'http://123.207.160.62/api/order/{}/'.format(order.id)}
+                'detail_url': url_for('user_blueprint.get_user_order_detail', uid=order.id, _external=True)}
         data_set.append(data)
     return jsonify({'data': data_set, 'count': pagination.total, 'total_pages': pagination.pages}), 200
 
@@ -76,8 +86,8 @@ def get_user_orders():
 @checkLogin
 def get_user_order_detail(order_id):
     order = Order.query.get_or_404(order_id)
-    if g.user.id != order.seller_id and g.user.id != order.customer_id:
-        # 只有买卖双方能看到他们的订单
+    if g.user.id != order.seller_id and g.user.id != order.customer_id and not g.user.is_admin:
+        # 只有买卖双方和管理员能看到他们的订单
         abort(403)
     try:
         order_extra = OrderExtra.filter_by(order_id=order_id).first()

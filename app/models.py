@@ -1,6 +1,8 @@
 from datetime import datetime
 
+from flask import session
 from flask_sqlalchemy import SQLAlchemy
+from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
 
@@ -105,8 +107,9 @@ class User(db.Model):
     def is_super_designer(self):
         return self.role_id == 3
 
+    @property
     def is_admin(self):
-        return self.role_id == 4
+        return False
 
     def can(self, permission):
         """
@@ -127,13 +130,12 @@ class Category(db.Model):
     pictures = db.relationship('Picture', backref='category', lazy='dynamic')
 
 
-
 # 标签表
 class Tag(db.Model):
     __tablename__ = 'tags'
-    id = db.Column(db.Integer, primary_key=True,index=True)
+    id = db.Column(db.Integer, primary_key=True, index=True)
     name = db.Column(db.String(64))
-    tag = db.relationship('Picture', backref='tag',lazy='dynamic')
+    tag = db.relationship('Picture', backref='tag', lazy='dynamic')
 
 
 class StarVideo(db.Model):
@@ -200,9 +202,9 @@ class HotOrder(db.Model):
     热度榜的数据库，方便后台管理
     """
     __tablename__ = 'hot_order'
-    id = db.Column(db.Integer,primary_key=True)
-    picture_id = db.Column(db.Integer,db.ForeignKey('picture.id'))
-    order = db.Column(db.Integer,index=True)
+    id = db.Column(db.Integer, primary_key=True)
+    picture_id = db.Column(db.Integer, db.ForeignKey('picture.id'))
+    order = db.Column(db.Integer, index=True)
 
 
 class Picture(db.Model):
@@ -223,9 +225,9 @@ class Picture(db.Model):
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
 
     # 点击量，每一个视频被请求详情时这个数加一
-    clicks = db.Column(db.Integer, default = 0)
+    clicks = db.Column(db.Integer, default=0)
     # 分享数
-    share_count = db.Column(db.Integer,default=0)
+    share_count = db.Column(db.Integer, default=0)
 
     # 是否是后台认定的推荐内容
     isrecommend = db.Column(db.Boolean, default=False)
@@ -356,3 +358,33 @@ class OrderExtra(db.Model):
     order_id = db.Column(db.Integer, db.ForeignKey('order.id'))
     order = db.relationship('Order', backref='item', uselist=False)
 
+
+class BackendUser(db.Model):
+    """
+    运营后台的用户系统
+    """
+    __tablename__ = 'backend_user'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(20), unique=True)
+    pw_hash = db.Column(db.String(20))
+
+    def __init__(self, username, password):
+        self.username = username
+        self.set_password(password)
+
+    def __str__(self):
+        return self.name
+
+    def set_password(self, password):
+        self.pw_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.pw_hash, password)
+
+    def login(self):
+        session['username'] = self.username
+        return session['username']
+
+    @property
+    def is_admin(self):
+        return True

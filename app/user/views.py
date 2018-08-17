@@ -1,4 +1,4 @@
-from flask import request, jsonify, abort, g
+from flask import request, jsonify, abort, g, url_for
 
 from app.middlewares import checkLogin
 from app.models import User, ReportMessage, ApplyMessage
@@ -40,7 +40,7 @@ def login():
     token = generate_3rd_session(session_key, openid)
 
     return jsonify({'token': token, 'uid': user.id,
-                    'detail_url': 'http://123.207.160.62/api/user/{}/'.format(user.id)}), 200
+                    'detail_url': url_for('user_blueprint.get_user_info', uid=user.id, _external=True)}), 200
 
 
 @user_blueprint.route('/token/', methods=['GET'])
@@ -66,10 +66,10 @@ def get_user_info(uid):
         data = serializer(user, ['id', 'name', 'avatarUrl', 'last_login'])
 
     data.update({'role': str(user.role),
-                 'followed': 'http://123.207.160.62/api/user/followed/list/',
-                 'followers': 'http://123.207.160.62/api/user/followers/list/'})
+                 'followed': url_for('user_blueprint.followed_list', _external=True),
+                 'followers': url_for('user_blueprint.followers_list', _external=True)})
     if g.user == user:
-        data.update({'orders': 'http://123.207.160.62/api/order/list/'})
+        data.update({'orders': url_for('order_blueprint.get_user_orders', _external=True)})
 
     return jsonify({'data': data}), 200
 
@@ -131,17 +131,23 @@ def follow_or_unfollow(uid):
 @user_blueprint.route('/followed/list/', methods=['GET'])
 @checkLogin
 def followed_list():
+    uid = request.json.get('uid')
+    if uid:
+        user = User.query.get_or_404(uid)
+    else:
+        # 默认查看当前登录用户的关注列表
+        user = g.user
     page = request.json.get('page')
     if page is None:
         abort(400)
-    followed_count = g.user.followed.count()
-    pagination = g.user.followed.paginate(page, per_page=10, error_out=False)
+    followed_count = user.followed.count()
+    pagination = user.followed.paginate(page, per_page=10, error_out=False)
     followed_user_list = pagination.items
     # data = [serializer(f, ['id', 'name', 'avatarUrl']) for f in followed_user_list]
     data_set = []
     for f in followed_user_list:
         data = {"id": f.id, "name": f.name, "avatarUrl": f.avatarUrl,
-                "detail_url": 'http://123.207.160.62/api/user/{}/'.format(f.id)}
+                "detail_url": url_for('user_blueprint.get_user_info', uid=f.id, _external=True)}
         data_set.append(data)
     return jsonify({'data': data_set, 'count': pagination.total,
                     'total_pages': pagination.pages, "followed_count": followed_count}), 200
@@ -150,17 +156,24 @@ def followed_list():
 @user_blueprint.route('/followers/list/', methods=['GET'])
 @checkLogin
 def followers_list():
+    uid = request.json.get('uid')
+    if uid:
+        user = User.query.get_or_404(uid)
+    else:
+        # 默认查看当前登录用户的关注列表
+        user = g.user
     page = request.json.get('page')
     if page is None:
         abort(400)
-    follower_count = g.user.followers.count()
-    pagination = g.user.followers.paginate(page, per_page=10, error_out=False)
+    follower_count = user.followers.count()
+    pagination = user.followers.paginate(page, per_page=10, error_out=False)
     followers = pagination.items
     # data = [serializer(f, ['id', 'name', 'avatarUrl']) for f in followers]
     data_set = []
     for f in followers:
         data = {"id": f.id, "name": f.name, "avatarUrl": f.avatarUrl,
-                "detail_url": 'http://123.207.160.62/api/user/{}/'.format(f.id), "is_followed": g.user.is_following(f)}
+                "detail_url": url_for('user_blueprint.get_user_info', uid=f.id, _external=True),
+                "is_followed": g.user.is_following(f)}
         data_set.append(data)
     return jsonify({'data': data_set, 'count': pagination.total,
                     'total_pages': pagination.pages, 'follower_count': follower_count}), 200

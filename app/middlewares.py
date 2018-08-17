@@ -1,7 +1,9 @@
 from functools import wraps
 from flask import request, abort, g
+
+from app.config import logger
 from app.utils.wx_api import get_token_value
-from app.models import User
+from app.models import User, BackendUser
 
 
 def checkLogin(f):
@@ -12,12 +14,35 @@ def checkLogin(f):
     """
     @wraps(f)
     def decorated_function(*args, **kwargs):
-        try:
-            token = request.headers['Authorization']
-            session_key, openid = get_token_value(token)
-            user = User.query.filter_by(openid=openid).first()
-        except:
-            abort(403)
-        g.user = user
+        data = request.json
+        if not check_backend_user(data):
+            # 若不是后台用户，则为小程序用户
+            try:
+                token = request.headers['Authorization']
+                session_key, openid = get_token_value(token)
+                user = User.query.filter_by(openid=openid).first()
+            except:
+                abort(403)
+            g.user = user
         return f(*args, **kwargs)
     return decorated_function
+
+
+def check_backend_user(data):
+    """
+    后台用户认证
+    """
+    username = data.get('username')
+    if username:
+        password = data.get('password')
+        if password is None:
+            abort(403)
+        try:
+            user = BackendUser.query.filter_by(username=username).first()
+        except Exception as e:
+            logger.error(e)
+            abort(404)
+        if user.check_password(password):
+            g.user = user
+            return True
+    return False
