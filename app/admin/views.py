@@ -114,8 +114,7 @@ class UserView(MethodView):
         data_set = []
         for user in query_set:
             data = serializer(user, ['id', 'name', 'last_login', 'created_time'])
-            data.update({'role': str(user.role),
-                         'orders': '/user/{uid}/order/list/'.format(uid=user.id)})  # need modify !!!
+            data.update({'role': str(user.role)})
             data_set.append(data)
         return jsonify({'data': data_set, 'count': pagination.total, 'total_pages': pagination.pages}), 200
 

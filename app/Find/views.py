@@ -7,7 +7,6 @@ from .. import config
 
 # 推荐页面
 @find.route('/recommend/<int:page>')
-@checkLogin
 def recommend(page):
     hot_pictures = HotOrder.query.all()
     pic_ids = []
@@ -28,7 +27,6 @@ def recommend(page):
 
 # 类型feed页面,
 @find.route('/category_recommend', methods=['GET','POST'])
-@checkLogin
 def type_recommend():
     data = request.json
     category_id = data.get('category_id')
