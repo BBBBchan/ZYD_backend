@@ -1,11 +1,11 @@
 from flask import request,g, jsonify
 from . import pictrue_manage_blueprint as picture_manage
-from app.middlewares import checkLogin
+from app.middlewares import checkLogin, checkAdmin
 from app.models import *
 
 
 #增加作品类型，修改，删除仅可管理员后台操作
-@picture_manage.route('/add_category', methods=['GET','POST'])
+@picture_manage.route('/add_category', methods=['POST'])
 @checkLogin
 def add_category():
     data = request.json
@@ -31,7 +31,7 @@ def add_category():
         return jsonify({'message':"only admin can"}),403
 
 
-@picture_manage.route('/change_category', methods=['GET','POST'])
+@picture_manage.route('/change_category', methods=['POST'])
 @checkLogin
 def change_category():
     data = request.json
@@ -62,70 +62,63 @@ def change_category():
 
 
 @picture_manage.route('/delete_category/<category_id>')
-@checkLogin
+@checkAdmin
 def delete_category(category_id):
-    if g.user.is_admin():
-        category = Category.query.filter_by(id=category_id).first()
-        null_category = Category.query.filter_by(id=1).first()
-        all_pictures = Picture.query.filter_by(category=category).all()
-        try:
-            for picture in all_pictures:
-                picture.category_id = null_category.id
-                db.session.add(picture)
-                db.session.commit()
-        except:
-            return jsonify({'message': 'delete successful'})
-        if category is None:
-            return jsonify({'message':'had delete'}), 404
-        try:
-            db.session.delete(category)
+    category = Category.query.filter_by(id=category_id).first()
+    null_category = Category.query.filter_by(id=1).first()
+    all_pictures = Picture.query.filter_by(category=category).all()
+    try:
+        for picture in all_pictures:
+            picture.category_id = null_category.id
+            db.session.add(picture)
             db.session.commit()
-            return jsonify({'message':'delete successful'})
-        except:
-            db.session.rollback()
-            return jsonify({'message':'delete failure'})
-    else:
-        return jsonify({'message': 'no permission'})
+    except:
+        return jsonify({'message': 'delete successful'})
+    if category is None:
+        return jsonify({'message': 'had delete'}), 404
+    try:
+        db.session.delete(category)
+        db.session.commit()
+        return jsonify({'message': 'delete successful'})
+    except:
+        db.session.rollback()
+        return jsonify({'message': 'delete failure'})
 
 
 # 增加作品标签，删除仅可管理员后台操作
-@picture_manage.route('/add_tag',methods=['GET','POST'])
-@checkLogin
+@picture_manage.route('/add_tag',methods=['POST'])
+@checkAdmin
 def add_tag():
     data = request.json
-    if g.user.is_admin():
-        tag_name = data.get('tag_name')
-        if tag_name is None:
-            return jsonify({'message':'no tag name'}), 403
-        new_tag = Tag(name=tag_name)
-        try:
-            db.session.add(new_tag)
-            db.session.commit()
-            return jsonify({'message':'add successful'})
-        except:
-            db.session.rollback()
-            return jsonify({'message':'add failure'})
-    else:
-        return jsonify({'message': "only admin can"}), 403
+    tag_name = data.get('tag_name')
+    if tag_name is None:
+        return jsonify({'message': 'no tag name'}), 403
+    new_tag = Tag(name=tag_name)
+    try:
+        db.session.add(new_tag)
+        db.session.commit()
+        return jsonify({'message': 'add successful'})
+    except:
+        db.session.rollback()
+        return jsonify({'message': 'add failure'})
 
 
 @picture_manage.route('/delete_tag/<int:tag_id>')
-@checkLogin
+@checkAdmin
 def delete_tag(tag_id):
-    if g.user.is_admin():
-        tag = Tag.query.filter_by(id=tag_id).first()
-        if tag is None:
-            return jsonify({'message':'no this tag'}), 404
-        try:
-            db.session.delete(tag)
-            db.session.commit()
-            return jsonify({'message':'delete successful'})
-        except:
-            db.session.rollback()
-            return jsonify({'message':'delete failure'})
+    tag = Tag.query.filter_by(id=tag_id).first()
+    if tag is None:
+        return jsonify({'message': 'no this tag'}), 404
+    try:
+        db.session.delete(tag)
+        db.session.commit()
+        return jsonify({'message': 'delete successful'})
+    except:
+        db.session.rollback()
+        return jsonify({'message': 'delete failure'})
 
 
-# 图片申请上推荐，仅图片作者课申请
+# 图片申请上推荐，仅图片作者可申请
 @picture_manage.route('/apply_recommend/<int:picture_id>')
 @checkLogin
 def want_recommend(picture_id):
@@ -146,153 +139,131 @@ def want_recommend(picture_id):
 
 # 获取申请上推荐的图片列表仅管理员可看
 @picture_manage.route('/apply_list')
-@checkLogin
+@checkAdmin
 def apply_picture_list():
-    if g.user.is_admin():
-        apply_pictures = Picture.query.filter_by(isrecommend=1).all()
-        if len(apply_pictures) > 0:
-            result = []
-            for picture in apply_pictures:
-                re = {'picture_id':picture.id,
-                      'picture_name':picture.name,
-                      'picture_url':picture.url,
-                      'picture_author':picture.author_id
-                      }
-                result.append(re)
-            return jsonify(result)
-        else:
-            return jsonify({'message':'no picture'})
+    apply_pictures = Picture.query.filter_by(isrecommend=1).all()
+    if len(apply_pictures) > 0:
+        result = []
+        for picture in apply_pictures:
+            re = {'picture_id': picture.id,
+                  'picture_name': picture.name,
+                  'picture_url': picture.url,
+                  'picture_author': picture.author_id
+                  }
+            result.append(re)
+        return jsonify(result)
     else:
-        return jsonify({'message':'no permission watch'}), 401
+        return jsonify({'message': 'no picture'})
 
 
 # 管理员是否同意图片上推荐
-@picture_manage.route('/judgment_apply', methods=['POST','GET'])
-@checkLogin
+@picture_manage.route('/judgment_apply', methods=['POST'])
+@checkAdmin
 def judgment_apply():
-    if g.user.is_admin():
-        data = request.json
-        apply_id = data.get('picture_id')
-        if apply_id is None:
-            return jsonify({'message':'data missing'}), 401
-        apply_picture = Picture.query.filter_by(id=apply_id).first()
-        if apply_picture is None or apply_picture.isrecommend != 1:
-            return jsonify({'message':'no picture or not apply'}), 404
-        judgment = data.get('judgment',False)
-        if judgment:
-            apply_picture.isrecommend = 2
-        else:
-            apply_picture.isrecommend = 0
-        try:
-            db.session.add(apply_picture)
-            db.session.commit()
-            return jsonify({'message':'successful'})
-        except:
-            db.session.rollback()
-            return jsonify({'message':'failure'})
+    data = request.json
+    apply_id = data.get('picture_id')
+    if apply_id is None:
+        return jsonify({'message': 'data missing'}), 401
+    apply_picture = Picture.query.filter_by(id=apply_id).first()
+    if apply_picture is None or apply_picture.isrecommend != 1:
+        return jsonify({'message': 'no picture or not apply'}), 404
+    judgment = data.get('judgment', False)
+    if judgment:
+        apply_picture.isrecommend = 2
     else:
-        return jsonify({'only admin can'})
+        apply_picture.isrecommend = 0
+    try:
+        db.session.add(apply_picture)
+        db.session.commit()
+        return jsonify({'message': 'successful'})
+    except:
+        db.session.rollback()
+        return jsonify({'message': 'failure'})
 
 
 # 同意推荐的列表
 @picture_manage.route('/recommend_list')
-@checkLogin
+@checkAdmin
 def apply_picture_list():
-    if g.user.is_admin():
-        apply_pictures = Picture.query.filter_by(isrecommend=2).all()
-        if len(apply_pictures) > 0:
-            result = []
-            for picture in apply_pictures:
-                re = {'picture_id':picture.id,
-                      'picture_name':picture.name,
-                      'picture_url':picture.url,
-                      'picture_author':picture.author_id
-                      }
-                result.append(re)
-            return jsonify(result)
-        else:
-            return jsonify({'message':'no picture'})
+    apply_pictures = Picture.query.filter_by(isrecommend=2).all()
+    if len(apply_pictures) > 0:
+        result = []
+        for picture in apply_pictures:
+            re = {'picture_id': picture.id,
+                  'picture_name': picture.name,
+                  'picture_url': picture.url,
+                  'picture_author': picture.author_id
+                  }
+            result.append(re)
+        return jsonify(result)
     else:
-        return jsonify({'message':'no permission watch'}), 401
+        return jsonify({'message': 'no picture'})
+
 
 @picture_manage.route('/cancel_recommend/<int:picture_id>')
-@checkLogin
+@checkAdmin
 def cancel_recommend(picture_id):
-    if g.user.is_admin():
-        picture = Picture.query.filter_by(id=picture_id).first()
-        if picture is None:
-            return jsonify({'message':'no picture'})
-        picture.isrecommend = 0
-        try:
-            db.session.add(picture)
-            db.session.commit()
-            return jsonify({'message':'cancel successful'})
-        except:
-            db.session.rollback()
-            return jsonify({'message':'cancel failure'})
-    else:
-        return jsonify({'message':'only admin can cancel'})
-
+    picture = Picture.query.filter_by(id=picture_id).first()
+    if picture is None:
+        return jsonify({'message': 'no picture'})
+    picture.isrecommend = 0
+    try:
+        db.session.add(picture)
+        db.session.commit()
+        return jsonify({'message': 'cancel successful'})
+    except:
+        db.session.rollback()
+        return jsonify({'message': 'cancel failure'})
 
 
 #  选择某图片上轮播图
 @picture_manage.route('/choose_carousel/<int:picture_id>')
-@checkLogin
+@checkAdmin
 def choose_carousel(picture_id):
-    if g.user.is_admin():
-        picture = Picture.query.filter_by(id=picture_id).first()
-        if picture is None:
-            return jsonify({'message':'no this picture'})
-        picture.isrecommend = 3
-        try:
-            db.session.add(picture)
-            db.session.commit()
-            return jsonify({'message':'ok'})
-        except:
-            db.session.rollback()
-            return jsonify({'message':'failure'})
-    else:
-        return jsonify({'message':'only admin can'})
+    picture = Picture.query.filter_by(id=picture_id).first()
+    if picture is None:
+        return jsonify({'message': 'no this picture'})
+    picture.isrecommend = 3
+    try:
+        db.session.add(picture)
+        db.session.commit()
+        return jsonify({'message': 'ok'})
+    except:
+        db.session.rollback()
+        return jsonify({'message': 'failure'})
 
 
 #获得轮播图列表
 @picture_manage.route('/carousel_list')
-@checkLogin
+@checkAdmin
 def carousel_list():
-    if g.user.is_admin():
-        apply_pictures = Picture.query.filter_by(isrecommend=3).all()
-        if len(apply_pictures) > 0:
-            result = []
-            for picture in apply_pictures:
-                re = {'picture_id':picture.id,
-                      'picture_name':picture.name,
-                      'picture_url':picture.url,
-                      'picture_author':picture.author_id
-                      }
-                result.append(re)
-            return jsonify(result)
-        else:
-            return jsonify({'message':'no picture'})
+    apply_pictures = Picture.query.filter_by(isrecommend=3).all()
+    if len(apply_pictures) > 0:
+        result = []
+        for picture in apply_pictures:
+            re = {'picture_id': picture.id,
+                  'picture_name': picture.name,
+                  'picture_url': picture.url,
+                  'picture_author': picture.author_id
+                  }
+            result.append(re)
+        return jsonify(result)
     else:
-        return jsonify({'message':'no permission watch'}), 401
-
+        return jsonify({'message': 'no picture'})
 
 
 # 管理员将某图片撤下轮播图
 @picture_manage.route('/cancel_carousel/<int:picture_id>')
-@checkLogin
+@checkAdmin
 def cancel_carousel(picture_id):
-    if g.user.is_admin():
-        picture = Picture.query.filter_by(id=picture_id).first()
-        if picture is None:
-            return jsonify({'message':'no picture'}), 404
-        picture.isrecommend = 0
-        try:
-            db.session.add(picture)
-            db.session.commit()
-            return jsonify({'message':'cancel successful'})
-        except:
-            db.session.rollback()
-            return jsonify({'message':'cancel failure'})
-    else:
-        return jsonify({'message':'only admin can cancel'}), 401
+    picture = Picture.query.filter_by(id=picture_id).first()
+    if picture is None:
+        return jsonify({'message': 'no picture'}), 404
+    picture.isrecommend = 0
+    try:
+        db.session.add(picture)
+        db.session.commit()
+        return jsonify({'message': 'cancel successful'})
+    except:
+        db.session.rollback()
+        return jsonify({'message': 'cancel failure'})
