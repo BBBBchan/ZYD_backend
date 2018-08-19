@@ -5,7 +5,7 @@ from app.models import *
 from app.config import *
 
 #创建作品集
-@showcase_blueprint.route('/create_showcase', methods=['GET','POST'])
+@showcase_blueprint.route('/create_showcase', methods=['POST'])
 @checkLogin
 def create_showcase():
 	data = request.json
@@ -57,7 +57,7 @@ def showcase_delete(showcase_id):
 		return jsonify({'message':'删除失败'}),400
 
 #获取作品集列表
-@showcase_blueprint.route('/showcase_list', methods=['GET','POST'])
+@showcase_blueprint.route('/showcase_list', methods=['POST'])
 @checkLogin
 def showcase_list():
 	data = request.json
@@ -87,7 +87,7 @@ def showcase_list():
 		return jsonify({'message':'获取作品集列表失败'}),401
 
 #添加图片到作品集
-@showcase_blueprint.route('/add_pic', methods=['GET','POST'])
+@showcase_blueprint.route('/add_pic', methods=['POST'])
 @checkLogin
 def add_pic():
 	data = request.json
@@ -126,7 +126,7 @@ def add_pic():
 		return jsonify({'message':'添加失败'}),407
 
 #从作品集中删除图片
-@showcase_blueprint.route('/delete_pic', methods=['GET','POST'])
+@showcase_blueprint.route('/delete_pic', methods=['POST'])
 @checkLogin
 def delete_pic():
 	data = request.json
@@ -206,7 +206,7 @@ def showcase_detail(showcase_id):
 		return jsonify(res)
 
 #修改作品集基本信息
-@showcase_blueprint.route('/showcase_modify', methods=['GET', 'POST'])
+@showcase_blueprint.route('/showcase_modify', methods=['POST'])
 @checkLogin
 def showcase_modify():
 	data = request.json

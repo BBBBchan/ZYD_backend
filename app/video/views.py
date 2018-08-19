@@ -17,7 +17,7 @@ def no_login():
 
 
 @checkLogin
-@video_blueprint.route('/video_list', methods=['GET', 'POST'])
+@video_blueprint.route('/video_list', methods=['POST'])
 def video_list():
     request_data = request.json
     print(request_data)
@@ -110,7 +110,7 @@ def video_list():
 
 
 @checkLogin
-@video_blueprint.route('/upload_video', methods=['GET', 'POST'])
+@video_blueprint.route('/upload_video', methods=['POST'])
 def upload_video():
     upload_data = request.json
     user_id = upload_data.get('user_id')

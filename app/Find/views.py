@@ -5,7 +5,7 @@ from ..middlewares import checkLogin
 import math
 from .. import config
 
-@find.route('/add_category', methods=['GET','POST'])
+@find.route('/add_category', methods=['POST'])
 @checkLogin
 def add_category():
     data = request.json
@@ -24,7 +24,7 @@ def add_category():
         return jsonify({'message':'failure'}), 401
 
 
-@find.route('/change_category', methods=['GET','POST'])
+@find.route('/change_category', methods=['POST'])
 @checkLogin
 def change_category():
     data = request.json
@@ -95,7 +95,7 @@ def recommend(page):
     return jsonify(result)
 
 # 类型feed页面,
-@find.route('/category_recommend', methods=['GET','POST'])
+@find.route('/category_recommend', methods=['POST'])
 def type_recommend():
     data = request.json
     category_id = data.get('category_id')

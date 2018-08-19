@@ -107,7 +107,6 @@ class User(db.Model):
     def is_super_designer(self):
         return self.role_id == 3
 
-    @property
     def is_admin(self):
         return False
 
@@ -385,6 +384,5 @@ class BackendUser(db.Model):
         session['username'] = self.username
         return session['username']
 
-    @property
     def is_admin(self):
         return True

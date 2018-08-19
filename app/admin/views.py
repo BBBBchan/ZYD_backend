@@ -3,19 +3,22 @@ from flask.views import MethodView
 
 from app.admin import admin_blueprint
 from app.config import logger
+from app.middlewares import checkAdmin
 from app.models import User, db, ApplyMessage, Role, ReportMessage
 from app.utils.serializers import serializer
 from app.utils.utils import db_handler, message_confirm, push_message_to_user
 
 
 @admin_blueprint.route('/apply/list/', methods=['GET'])
+@checkAdmin
 def get_apply_list():
-    page = request.json.get('page')
-    if page is None:
+    page_num = request.args.get('page_num', '1')
+    page_count = request.args.get('page_count', '10')
+    if page_num is None or page_count is None:
         abort(400)
     try:
         pagination = ApplyMessage.query.filter_by(status=False).order_by(ApplyMessage.created_time.desc())\
-            .paginate(page, per_page=10, error_out=False)
+            .paginate(int(page_num), per_page=int(page_count), error_out=False)
         apply_list = pagination.items
     except Exception as e:
         logger.error(e)
@@ -25,7 +28,8 @@ def get_apply_list():
     return jsonify({'data': data, 'count': pagination.total, 'total_pages': pagination.pages}), 200
 
 
-@admin_blueprint.route('/apply/<uid>/', methods=['GET'])
+@admin_blueprint.route('/apply/<uid>/', methods=['POST'])
+@checkAdmin
 def apply_manage(uid):
     is_passed = request.json.get('is_passed')
     if is_passed:
@@ -53,13 +57,15 @@ def apply_manage(uid):
 
 
 @admin_blueprint.route('/report/list/', methods=['GET'])
+@checkAdmin
 def get_report_list():
-    page = request.json.get('page')
-    if page is None:
+    page_num = request.args.get('page_num', '1')
+    page_count = request.args.get('page_count', '10')
+    if page_num is None or page_count is None:
         abort(400)
     try:
         pagination = ReportMessage.query.filter_by(status=False).order_by(ReportMessage.created_time.desc())\
-            .paginate(page, per_page=10, error_out=False)
+            .paginate(int(page_num), per_page=int(page_count), error_out=False)
         apply_list = pagination.items
     except Exception as e:
         logger.error(e)
@@ -69,7 +75,8 @@ def get_report_list():
     return jsonify({'data': data, 'count': pagination.total, 'total_pages': pagination.pages}), 200
 
 
-@admin_blueprint.route('/report/<uid>/', methods=['GET'])
+@admin_blueprint.route('/report/<uid>/', methods=['POST'])
+@checkAdmin
 def report_manage(uid):
     is_banned = request.json.get('is_banned')
     if is_banned:
@@ -82,17 +89,20 @@ def report_manage(uid):
 
 
 @admin_blueprint.route('/blacklist/', methods=['GET'])
+@checkAdmin
 def blacklist():
-    page = request.json.get('page')
-    if page is None:
+    page_num = request.args.get('page_num', '1')
+    page_count = request.args.get('page_count', '10')
+    if page_num is None or page_count is None:
         abort(400)
-    pagination = User.query.filter_by(is_banned=True).paginate(page, per_page=10, error_out=False)
+    pagination = User.query.filter_by(is_banned=True).paginate(int(page_num), per_page=int(page_count), error_out=False)
     users = pagination.items
     data = [serializer(u, ['id', 'name']) for u in users]
     return jsonify({'data': data, 'count': pagination.total, 'total_pages': pagination.pages})
 
 
 @admin_blueprint.route('/blacklist/<uid>/', methods=['GET'])
+@checkAdmin
 def blacklist_add_or_remove_user(uid):
     user = User.query.get_or_404(uid)
     user.is_banned = not user.is_banned
@@ -101,15 +111,19 @@ def blacklist_add_or_remove_user(uid):
 
 
 class UserView(MethodView):
+    decorators = [checkAdmin]
+
     def get(self):
         # 获取特定类型的用户列表
-        permission = request.json.get('permission')
-        page = request.json.get('page')
-        if permission is None or page is None:
+        role_name = request.args.get('role')
+        role = Role.query.filter_by(name=role_name).first()
+        page_num = request.args.get('page_num', '1')
+        page_count = request.args.get('page_count', '10')
+        if role is None or page_num is None or page_count is None:
             abort(400)
 
-        pagination = User.query.filter_by(permission=permission)\
-            .order_by(User.created_time.desc()).paginate(page, per_page=10, error_out=False)
+        pagination = User.query.filter_by(role=role)\
+            .order_by(User.created_time.desc()).paginate(int(page_num), per_page=int(page_count), error_out=False)
         query_set = pagination.items
         data_set = []
         for user in query_set:
@@ -123,6 +137,7 @@ class UserView(MethodView):
         user = User.query.get_or_404(uid)
         user.is_banned = not user.is_banned
         db_handler(user)
+        return jsonify({'message': '操作成功'}), 200
 
     def put(self, uid):
         # 取消/降级用户设计师资格
@@ -155,5 +170,5 @@ class UserView(MethodView):
 
 
 user_view = UserView.as_view('user')
-admin_blueprint.add_url_rule('/user/', view_func=user_view, methods=['GET'])
+admin_blueprint.add_url_rule('/users/', view_func=user_view, methods=['GET'])
 admin_blueprint.add_url_rule('/user/<uid>/', view_func=user_view, methods=['POST', 'PUT', 'DELETE'])
