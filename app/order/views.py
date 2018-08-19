@@ -44,26 +44,27 @@ def generate_user_order():
 @order_blueprint.route('/list/', methods=['GET'])
 @checkLogin
 def get_user_orders():
-    if g.user.is_admin:
+    if g.user.is_admin():
         # 如果当前用户为管理员，他具有查询用户订单的权限，而普通用户只能查看自己的订单
-        uid = request.json.get('uid')
+        uid = request.args.get('uid')
         if uid is None:
             abort(400)
-        user = User.query.get_or_404(uid)
+        user = User.query.get_or_404(int(uid))
     else:
         user = g.user
 
-    page = request.json.get('page')
-    if page is None:
+    page_num = request.args.get('page_num', '1')
+    page_count = request.args.get('page_count', '10')
+    if page_num is None or page_count is None:
         abort(400)
     if user.is_designer() or user.is_super_designer():
         # 如果用户是设计师, 设计师接收的订单
-        pagination = Order.query.filter_by(seller_id=user.id)\
-            .order_by(Order.created_time.desc()).order_by(Order.status).paginate(page, per_page=10, error_out=False)
+        pagination = Order.query.filter_by(seller_id=user.id).order_by(Order.created_time.desc())\
+            .order_by(Order.status).paginate(int(page_num), per_page=int(page_count), error_out=False)
     else:
         # 普通用户， 用户主动递交的订单
-        pagination = Order.query.filter_by(customer_id=user.id)\
-            .order_by(Order.created_time.desc()).order_by(Order.status).paginate(page, per_page=10, error_out=False)
+        pagination = Order.query.filter_by(customer_id=user.id).order_by(Order.created_time.desc())\
+            .order_by(Order.status).paginate(int(page_num), per_page=int(page_count), error_out=False)
 
     orders = pagination.items
     data_set = []
@@ -86,14 +87,12 @@ def get_user_orders():
 @checkLogin
 def get_user_order_detail(order_id):
     order = Order.query.get_or_404(order_id)
-    if g.user.id != order.seller_id and g.user.id != order.customer_id and not g.user.is_admin:
+    if g.user.id != order.seller_id and g.user.id != order.customer_id and not g.user.is_admin():
         # 只有买卖双方和管理员能看到他们的订单
         abort(403)
-    try:
-        order_extra = OrderExtra.filter_by(order_id=order_id).first()
-    except Exception as e:
-        logger.error(e)
-        abort(500)
+    order_extra = OrderExtra.filter_by(order_id=order_id).first()
+    if order_extra is None:
+        abort(404)
     data = serializer(order, ['id', 'customer_id', 'seller_id', 'status',
                               'created_time', 'time', 'content', 'requirements', 'thinking', 'is_take_deposit', 'type'])
     customer = User.query.get_or_404(order.customer_id).name
@@ -109,7 +108,7 @@ def get_user_order_detail(order_id):
     return jsonify({'data': data}), 200
 
 
-@order_blueprint.route('/confirm/<order_id>/', methods=['GET'])
+@order_blueprint.route('/confirm/<order_id>/', methods=['POST'])
 @checkLogin
 def confirm_user_order(order_id):
     # 是否接受订单

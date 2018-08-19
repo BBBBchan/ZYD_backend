@@ -5,6 +5,7 @@ from ..middlewares import checkLogin
 import math
 from .. import config
 
+
 # 推荐页面
 @find.route('/recommend/<int:page>')
 def recommend(page):
@@ -26,7 +27,7 @@ def recommend(page):
     return jsonify(result)
 
 # 类型feed页面,
-@find.route('/category_recommend', methods=['GET','POST'])
+@find.route('/category_recommend', methods=['POST'])
 def type_recommend():
     data = request.json
     category_id = data.get('category_id')
