@@ -5,7 +5,7 @@ from app.models import *
 from app.config import *
 
 #  获取图片列表
-@picture.route('/picture_list', methods=['POST', 'GET'])
+@picture.route('/picture_list', methods=['POST'])
 def picture_list():
     data = request.json
     user_id = data.get('user_id')
@@ -62,7 +62,7 @@ def picture_detail(picture_id):
 
 
 # 上传图片
-@picture.route('/upload_picture',methods=['POST','GET'])
+@picture.route('/upload_picture',methods=['POST'])
 @checkLogin
 def upload_picture():
     data = request.json
@@ -156,7 +156,7 @@ def star(picture_id):
 
 
 # 修改图片信息
-@picture.route('/change_info', methods=['GET','POST'])
+@picture.route('/change_info', methods=['POST'])
 @checkLogin
 def change_info():
     data = request.json

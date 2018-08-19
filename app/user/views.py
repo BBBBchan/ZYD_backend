@@ -21,10 +21,7 @@ def login():
     if session_key is None or openid is None:
         return abort(400)
 
-    try:
-        user = User.query.filter_by(openid=openid).first()
-    except:
-        user = None
+    user = User.query.filter_by(openid=openid).first()
 
     if user is None:
         # user为空，说明为新用户，获取其信息录入数据库
@@ -131,17 +128,18 @@ def follow_or_unfollow(uid):
 @user_blueprint.route('/followed/list/', methods=['GET'])
 @checkLogin
 def followed_list():
-    uid = request.json.get('uid')
+    uid = request.args.get('uid')
     if uid:
-        user = User.query.get_or_404(uid)
+        user = User.query.get_or_404(int(uid))
     else:
         # 默认查看当前登录用户的关注列表
         user = g.user
-    page = request.json.get('page')
-    if page is None:
+    page_num = request.args.get('page_num', '1')
+    page_count = request.args.get('page_count', '10')
+    if page_num is None or page_count is None:
         abort(400)
     followed_count = user.followed.count()
-    pagination = user.followed.paginate(page, per_page=10, error_out=False)
+    pagination = user.followed.paginate(int(page_num), per_page=int(page_count), error_out=False)
     followed_user_list = pagination.items
     # data = [serializer(f, ['id', 'name', 'avatarUrl']) for f in followed_user_list]
     data_set = []
@@ -156,19 +154,19 @@ def followed_list():
 @user_blueprint.route('/followers/list/', methods=['GET'])
 @checkLogin
 def followers_list():
-    uid = request.json.get('uid')
+    uid = request.args.get('uid')
     if uid:
-        user = User.query.get_or_404(uid)
+        user = User.query.get_or_404(int(uid))
     else:
         # 默认查看当前登录用户的关注列表
         user = g.user
-    page = request.json.get('page')
-    if page is None:
+    page_num = request.args.get('page_num', '1')
+    page_count = request.args.get('page_count', '10')
+    if page_num is None or page_count is None:
         abort(400)
     follower_count = user.followers.count()
-    pagination = user.followers.paginate(page, per_page=10, error_out=False)
+    pagination = user.followers.paginate(int(page_num), per_page=int(page_count), error_out=False)
     followers = pagination.items
-    # data = [serializer(f, ['id', 'name', 'avatarUrl']) for f in followers]
     data_set = []
     for f in followers:
         data = {"id": f.id, "name": f.name, "avatarUrl": f.avatarUrl,

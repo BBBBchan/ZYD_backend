@@ -6,7 +6,7 @@ from app.models import User, CommentPicture, datetime, db, Permission, Picture
 from app.config import *
 
 #获取评论列表
-@comment_blueprint.route('/comment_list', methods=['GET','POST'])					
+@comment_blueprint.route('/comment_list', methods=['POST'])
 @checkLogin
 def comment_list():
 	data = request.json
@@ -36,7 +36,7 @@ def comment_list():
 	return jsonify(res)
 
 #修改评论
-@comment_blueprint.route('/comment_modify', methods=['GET', 'POST'])					
+@comment_blueprint.route('/comment_modify', methods=['POST'])
 @checkLogin
 def comment_modify():
 	data = request.json
@@ -70,7 +70,7 @@ def comment_modify():
 		return jsonify({'message':'获取评论失败'}),404
 
 #删除评论
-@comment_blueprint.route('/comment_delete', methods=['GET','POST'])						
+@comment_blueprint.route('/comment_delete', methods=['POST'])
 @checkLogin
 def comment_delete():
 	data = request.json
