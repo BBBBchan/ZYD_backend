@@ -184,7 +184,7 @@ def judgment_apply():
 # 同意推荐的列表
 @picture_manage.route('/recommend_list')
 @checkAdmin
-def apply_picture_list():
+def recommend_picture_list():
     apply_pictures = Picture.query.filter_by(isrecommend=2).all()
     if len(apply_pictures) > 0:
         result = []
