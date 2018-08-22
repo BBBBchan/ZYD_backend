@@ -4,9 +4,26 @@ from flask.views import MethodView
 from app.admin import admin_blueprint
 from app.config import logger
 from app.middlewares import checkAdmin
-from app.models import User, db, ApplyMessage, Role, ReportMessage
+from app.models import User, db, ApplyMessage, Role, ReportMessage, BackendUser
 from app.utils.serializers import serializer
 from app.utils.utils import db_handler, message_confirm, push_message_to_user
+
+
+@admin_blueprint.route('/login/', method=['POST'])
+def login():
+    data = request.json
+    username = data.get('username')
+    password = data.get('password')
+    if username is None or password is None:
+        abort(400)
+    user = BackendUser.query.filter_by(username=username).first()
+    if user is None:
+        abort(404)
+    if user.check_password(password):
+        user.login()
+    else:
+        abort(403)
+    return jsonify({'message': '登陆成功'}), 200
 
 
 @admin_blueprint.route('/apply/list/', methods=['GET'])

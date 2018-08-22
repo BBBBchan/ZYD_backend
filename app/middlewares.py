@@ -1,7 +1,6 @@
 from functools import wraps
-from flask import request, abort, g
+from flask import request, abort, g, session
 
-from app.config import logger
 from app.utils.wx_api import get_token_value
 from app.models import User, BackendUser
 
@@ -44,15 +43,12 @@ def check_backend_user():
     """
     后台用户认证
     """
-    username = request.headers.get('username')
+    username = session.get('username')
     if username:
-        password = request.headers.get('password')
-        if password is None:
-            abort(403)
         user = BackendUser.query.filter_by(username=username).first()
         if user is None:
             abort(404)
-        if user.check_password(password):
-            g.user = user
-            return True
-    return False
+        g.user = user
+        return True
+    else:
+        return False
