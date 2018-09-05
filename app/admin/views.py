@@ -9,7 +9,7 @@ from app.utils.serializers import serializer
 from app.utils.utils import db_handler, message_confirm, push_message_to_user
 
 
-@admin_blueprint.route('/login/', method=['POST'])
+@admin_blueprint.route('/login/', methods=['POST'])
 def login():
     data = request.json
     username = data.get('username')
@@ -31,8 +31,6 @@ def login():
 def get_apply_list():
     page_num = request.args.get('page_num', '1')
     page_count = request.args.get('page_count', '10')
-    if page_num is None or page_count is None:
-        abort(400)
     try:
         pagination = ApplyMessage.query.filter_by(status=False).order_by(ApplyMessage.created_time.desc())\
             .paginate(int(page_num), per_page=int(page_count), error_out=False)
@@ -78,8 +76,6 @@ def apply_manage(uid):
 def get_report_list():
     page_num = request.args.get('page_num', '1')
     page_count = request.args.get('page_count', '10')
-    if page_num is None or page_count is None:
-        abort(400)
     try:
         pagination = ReportMessage.query.filter_by(status=False).order_by(ReportMessage.created_time.desc())\
             .paginate(int(page_num), per_page=int(page_count), error_out=False)
@@ -110,21 +106,10 @@ def report_manage(uid):
 def blacklist():
     page_num = request.args.get('page_num', '1')
     page_count = request.args.get('page_count', '10')
-    if page_num is None or page_count is None:
-        abort(400)
     pagination = User.query.filter_by(is_banned=True).paginate(int(page_num), per_page=int(page_count), error_out=False)
     users = pagination.items
     data = [serializer(u, ['id', 'name']) for u in users]
     return jsonify({'data': data, 'count': pagination.total, 'total_pages': pagination.pages})
-
-
-@admin_blueprint.route('/blacklist/<uid>/', methods=['GET'])
-@checkAdmin
-def blacklist_add_or_remove_user(uid):
-    user = User.query.get_or_404(uid)
-    user.is_banned = not user.is_banned
-    db_handler(user)
-    return jsonify({'message': '操作成功'}), 200
 
 
 class UserView(MethodView):
@@ -136,7 +121,7 @@ class UserView(MethodView):
         role = Role.query.filter_by(name=role_name).first()
         page_num = request.args.get('page_num', '1')
         page_count = request.args.get('page_count', '10')
-        if role is None or page_num is None or page_count is None:
+        if role is None:
             abort(400)
 
         pagination = User.query.filter_by(role=role)\
@@ -173,7 +158,7 @@ class UserView(MethodView):
         db_handler(user)
         # 向用户推送的取消/降级消息
         push_message_to_user(user.id, content)
-        return jsonify({'msg': 'OK'}), 200
+        return jsonify({'message': '操作成功'}), 200
 
     def delete(self, uid):
         # 删除用户

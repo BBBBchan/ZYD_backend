@@ -1,3 +1,5 @@
+import datetime
+
 from flask import request, jsonify, abort, g, url_for
 
 from app.middlewares import checkLogin
@@ -33,6 +35,9 @@ def login():
         db_handler(user)
         # 让用户成为他自己的粉丝
         db_handler(user.follow(user))
+
+    user.last_login = datetime.datetime.utcnow
+    db_handler(user)
 
     token = generate_3rd_session(session_key, openid)
 
@@ -136,8 +141,6 @@ def followed_list():
         user = g.user
     page_num = request.args.get('page_num', '1')
     page_count = request.args.get('page_count', '10')
-    if page_num is None or page_count is None:
-        abort(400)
     followed_count = user.followed.count()
     pagination = user.followed.paginate(int(page_num), per_page=int(page_count), error_out=False)
     followed_user_list = pagination.items
@@ -162,8 +165,6 @@ def followers_list():
         user = g.user
     page_num = request.args.get('page_num', '1')
     page_count = request.args.get('page_count', '10')
-    if page_num is None or page_count is None:
-        abort(400)
     follower_count = user.followers.count()
     pagination = user.followers.paginate(int(page_num), per_page=int(page_count), error_out=False)
     followers = pagination.items

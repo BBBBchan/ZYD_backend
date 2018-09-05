@@ -1,4 +1,4 @@
-from flask import request, abort, jsonify, url_for
+from flask import request, abort, jsonify, url_for, g
 
 from app.config import logger
 from app.middlewares import checkLogin
@@ -55,8 +55,6 @@ def get_user_orders():
 
     page_num = request.args.get('page_num', '1')
     page_count = request.args.get('page_count', '10')
-    if page_num is None or page_count is None:
-        abort(400)
     if user.is_designer() or user.is_super_designer():
         # 如果用户是设计师, 设计师接收的订单
         pagination = Order.query.filter_by(seller_id=user.id).order_by(Order.created_time.desc())\
