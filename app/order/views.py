@@ -1,6 +1,5 @@
-from flask import request, abort, jsonify, url_for, g
+from flask import request, abort, jsonify, url_for, g, current_app
 
-from app.config import logger
 from app.middlewares import checkLogin
 from app.models import Order, User, OrderExtra
 from app.order import order_blueprint
@@ -19,7 +18,7 @@ def generate_user_order():
     try:
         new_order = Order(customer_id=g.user.id, seller_id=seller_id)
     except Exception as e:
-        logger.error(e)
+        current_app.logger.error(e)
         abort(500)
     db_handler(new_order)
 

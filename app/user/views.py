@@ -1,6 +1,6 @@
 import datetime
 
-from flask import request, jsonify, abort, g, url_for
+from flask import request, jsonify, abort, g, url_for, current_app
 
 from app.middlewares import checkLogin
 from app.models import User, ReportMessage, ApplyMessage
@@ -8,7 +8,6 @@ from app.user import user_blueprint
 from app.utils.serializers import serializer, save_or_not
 from app.utils.utils import upload_avatar_v1, db_handler
 from app.utils.wx_api import get_session_key_and_openid, generate_3rd_session, update_token
-from app.config import logger
 
 
 @user_blueprint.route('/login/', methods=['POST'])
@@ -30,13 +29,13 @@ def login():
         try:
             user = User(openid=openid)
         except Exception as e:
-            logger.error(e)
+            current_app.logger.error(e)
             abort(500)
         db_handler(user)
         # 让用户成为他自己的粉丝
         db_handler(user.follow(user))
 
-    user.last_login = datetime.datetime.utcnow
+    user.last_login = datetime.datetime.utcnow()
     db_handler(user)
 
     token = generate_3rd_session(session_key, openid)
@@ -188,7 +187,7 @@ def report(uid):
     try:
         report_message = ReportMessage(reason=reason, reported=reported_user, reporter=g.user)
     except Exception as e:
-        logger.error(e)
+        current_app.logger.error(e)
         abort(500)
     db_handler(report_message)
     return jsonify({'message': '举报成功'}), 200
@@ -210,7 +209,7 @@ def apply():
     try:
         apply_message = ApplyMessage(applicant=user, detail=detail, apply_type=apply_type)
     except Exception as e:
-        logger.error(e)
+        current_app.logger.error(e)
         abort(500)
     db_handler(apply_message)
     return jsonify({'message': '操作成功'}), 200

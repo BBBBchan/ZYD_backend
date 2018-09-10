@@ -1,8 +1,7 @@
-from flask import request, abort, jsonify
+from flask import request, abort, jsonify, current_app
 from flask.views import MethodView
 
 from app.admin import admin_blueprint
-from app.config import logger
 from app.middlewares import checkAdmin
 from app.models import User, db, ApplyMessage, Role, ReportMessage, BackendUser
 from app.utils.serializers import serializer
@@ -36,7 +35,7 @@ def get_apply_list():
             .paginate(int(page_num), per_page=int(page_count), error_out=False)
         apply_list = pagination.items
     except Exception as e:
-        logger.error(e)
+        current_app.logger.error(e)
         return jsonify({'message': '获取申请列表失败'}), 500
     data = [serializer(instance, ['id', 'applicant_id', 'applicant', 'created_time', 'detail'])
             for instance in apply_list]
@@ -81,7 +80,7 @@ def get_report_list():
             .paginate(int(page_num), per_page=int(page_count), error_out=False)
         apply_list = pagination.items
     except Exception as e:
-        logger.error(e)
+        current_app.logger.error(e)
         return jsonify({'message': '获取举报列表失败'}), 500
     data = [serializer(instance, ['id', 'reporter_id', 'reporter', 'reported', 'reported_id', 'reason', 'created_time'])
             for instance in apply_list]
@@ -167,7 +166,7 @@ class UserView(MethodView):
             db.session.remove(user)
             db.session.commit()
         except Exception as e:
-            logger.error(e)
+            current_app.logger.error(e)
             abort(500)
 
 
