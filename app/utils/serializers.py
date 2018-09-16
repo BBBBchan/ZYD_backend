@@ -3,7 +3,7 @@ import decimal
 from app.models import db
 
 
-def serializer(instance, args, extra_dict=None):
+def serializer(instance, args):
     """
     数据库模型的序列化器
     :param instance: 数据库实例

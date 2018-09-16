@@ -1,6 +1,5 @@
 from app.models import db, PushMessage
-from app.config import logger
-from flask import abort, request
+from flask import abort, request, current_app
 
 
 def upload_avatar_v1(file):
@@ -23,7 +22,7 @@ def db_handler(instance):
         db.session.commit()
     except Exception as e:
         db.session.rollback()
-        logger.error(e)
+        current_app.logger.error(e)
         abort(500)
 
 
@@ -50,6 +49,6 @@ def push_message_to_user(receiver_id, content):
     try:
         message = PushMessage(receiver_id=receiver_id, content=content)
     except Exception as e:
-        logger.error(e)
+        current_app.logger.error(e)
         abort(500)
     db_handler(message)

@@ -1,6 +1,5 @@
-import logging.config
-from os import path
 from datetime import datetime
+
 
 class Config(object):
     pass
@@ -36,7 +35,3 @@ APP_SECRET = '3ced46fd7e962e3eb92a82fa7348ef44'
 REDIS_HOST = 'localhost'
 REDIS_PORT = 6379
 REDIS_DB = 1
-
-path = path.join(path.dirname(path.abspath(__file__)), 'logger.conf')
-logging.config.fileConfig(path)
-logger = logging.getLogger('debug')
