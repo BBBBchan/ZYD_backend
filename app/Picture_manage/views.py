@@ -134,7 +134,7 @@ def want_recommend(picture_id):
         return jsonify({'message':'apply successful'})
     except:
         db.session.rollback()
-        return jsonify({'message':'apply failure'})
+        return jsonify({'message':'apply failure'}),403
 
 
 # 获取申请上推荐的图片列表仅管理员可看
@@ -153,7 +153,7 @@ def apply_picture_list():
             result.append(re)
         return jsonify(result)
     else:
-        return jsonify({'message': 'no picture'})
+        return jsonify({'message': 'no picture'}), 404
 
 
 # 管理员是否同意图片上推荐
@@ -178,7 +178,7 @@ def judgment_apply():
         return jsonify({'message': 'successful'})
     except:
         db.session.rollback()
-        return jsonify({'message': 'failure'})
+        return jsonify({'message': 'failure'}), 403
 
 
 # 同意推荐的列表
@@ -199,13 +199,13 @@ def recommend_picture_list():
     else:
         return jsonify({'message': 'no picture'})
 
-
+# 把图片从推荐上撤下来
 @picture_manage.route('/cancel_recommend/<int:picture_id>')
 @checkAdmin
 def cancel_recommend(picture_id):
     picture = Picture.query.filter_by(id=picture_id).first()
     if picture is None:
-        return jsonify({'message': 'no picture'})
+        return jsonify({'message': 'no picture'}),404
     picture.isrecommend = 0
     try:
         db.session.add(picture)
@@ -213,7 +213,7 @@ def cancel_recommend(picture_id):
         return jsonify({'message': 'cancel successful'})
     except:
         db.session.rollback()
-        return jsonify({'message': 'cancel failure'})
+        return jsonify({'message': 'cancel failure'}), 401
 
 
 #  选择某图片上轮播图
@@ -222,15 +222,14 @@ def cancel_recommend(picture_id):
 def choose_carousel(picture_id):
     picture = Picture.query.filter_by(id=picture_id).first()
     if picture is None:
-        return jsonify({'message': 'no this picture'})
-    picture.isrecommend = 3
+        return jsonify({'message': 'no this picture'}), 404
     try:
         db.session.add(picture)
         db.session.commit()
         return jsonify({'message': 'ok'})
     except:
         db.session.rollback()
-        return jsonify({'message': 'failure'})
+        return jsonify({'message': 'failure'}), 401
 
 
 #获得轮播图列表
@@ -266,4 +265,4 @@ def cancel_carousel(picture_id):
         return jsonify({'message': 'cancel successful'})
     except:
         db.session.rollback()
-        return jsonify({'message': 'cancel failure'})
+        return jsonify({'message': 'cancel failure'}),401
