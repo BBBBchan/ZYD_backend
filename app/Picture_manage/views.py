@@ -199,6 +199,7 @@ def recommend_picture_list():
     else:
         return jsonify({'message': 'no picture'})
 
+
 # 把图片从推荐上撤下来
 @picture_manage.route('/cancel_recommend/<int:picture_id>')
 @checkAdmin
@@ -234,7 +235,7 @@ def choose_carousel(picture_id):
 
 #获得轮播图列表
 @picture_manage.route('/carousel_list')
-@checkLogin
+@checkAdmin
 def carousel_list():
     apply_pictures = Picture.query.filter_by(isrecommend=3).all()
     if len(apply_pictures) > 0:
