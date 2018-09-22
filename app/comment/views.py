@@ -11,10 +11,10 @@ from app.config import *
 def comment_list():
 	data = request.json
 	user_id = data.get('user_id')
-	if user_id == None:
+	if user_id is None:
 		return jsonify({'message':'获取用户id失败'}),400
 	pic_id = data.get('pic_id')
-	if pic_id == None:
+	if pic_id is None:
 		return jsonify({'message':'获取图片id失败'}),401
 	page_count = data.get('page_count', 10)
 	page_num = data.get('page_num', 1)
@@ -41,16 +41,16 @@ def comment_list():
 def comment_modify():
 	data = request.json
 	comment_id = data.get('comment_id')
-	if comment_id == None:
+	if comment_id is None:
 		return jsonify({'message':'获取评论id失败'}),400
 	user_id = data.get('user_id')
-	if user_id == None:
+	if user_id is None:
 		return jsonify({'message':'获取用户id失败'}),401
 	pic_id = data.get('pic_id')
-	if pic_id == None:
+	if pic_id is None:
 		return jsonify({'message':'获取图片id失败'}),402
 	comment_detail = data.get('comment_detail')
-	if comment_detail == None:
+	if comment_detail is None:
 		return jsonify({'message':'获取评论内容失败'}),403
 
 	try:	
@@ -75,13 +75,13 @@ def comment_modify():
 def comment_delete():
 	data = request.json
 	comment_id = data.get('comment_id')
-	if comment_id == None:
+	if comment_id is None:
 		return jsonify({'message':'获取评论id失败'}),400
 	user_id = data.get('user_id')
-	if user_id == None:
+	if user_id is None:
 		return jsonify({'message':'获取用户id失败'}),401
 	pic_id = data.get('pic_id')
-	if pic_id == None:
+	if pic_id is None:
 		return jsonify({'message':'获取图片id失败'}),402
 
 	try:	
@@ -104,13 +104,13 @@ def comment_upload():
 	data = request.json
 	user_id = data.get('user_id')
 	
-	if user_id == None:
+	if user_id is None:
 		return jsonify({'message':'获取用户id失败'}),400
 	pic_id = data.get('pic_id')
-	if pic_id == None:
+	if pic_id is None:
 		return jsonify({'message':'获取图片id失败'}),401
 	comment_detail = data.get('comment_detail')
-	if comment_detail == None:
+	if comment_detail is None:
 		return jsonify({'message':'获取评论内容失败'}),402	
 	comment_time = str(datetime.now())
 	

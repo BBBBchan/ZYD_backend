@@ -14,6 +14,7 @@ from .showCase.views import showcase_blueprint
 from .user.views import user_blueprint
 from .video import video_blueprint
 from .Picture_manage import pictrue_manage_blueprint
+from .Push_manage import push_manage_blueprint
 from .Find import find
 
 
@@ -33,6 +34,7 @@ def create_app(object_name):
     app.register_blueprint(comment_blueprint, url_prefix='/api/comment')
     app.register_blueprint(admin_blueprint, url_prefix='/api/admin')
     app.register_blueprint(pictrue_manage_blueprint, url_prefix='/api/picture_manage')
+    app.register_blueprint(push_manage_blueprint, url_prefix='/api/push_manage')
     app.register_blueprint(find, url_prefix='/api/find/')
 
     return app
