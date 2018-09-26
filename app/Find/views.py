@@ -39,8 +39,8 @@ def type_recommend():
     c_pictures = category.pictures.all()
     hot_cate = {}
     for picture in c_pictures:
-        score = math.log((0.3*picture.clicks+0.2*picture.stars.count()
-                      + 0.3*picture.comments.count() + 0.2*picture.share_count)/4)+(
+        score = math.log(0.1 + (0.3*picture.clicks+0.2*len(picture.stars)
+                      + 0.3*len(picture.comments) + 0.2*picture.share_count)/4)+(
                 request_time-config.base_time).seconds/36000
         hot_cate[picture.id] = score
     temp_result = sorted(hot_cate.items(), key=lambda e: e[1], reverse=True)
@@ -60,6 +60,7 @@ def type_recommend():
         temp_r = {'id': r.id,
                   'picture_name': r.name,
                   'url': r.url,
+                  'author_avatar':r.author.avatarUrl
                   'author_id': r.author_id,
                   'author_name': r.author.name
                   }
@@ -87,12 +88,14 @@ def square(page):
     except:
         return jsonify({'message':'no more picture'}), 404
     result = []
+    all_author = User.query.filter(User.id.in_([author_id for picture.author_id in square_picture]))
     for picture in square_picture:
         re = {'id': picture.id,
               'name': picture.name,
               'url': picture.url,
               'author_id': picture.author_id,
               'author_name': picture.author.name,
+              'author_avatar':picture.author.avatarUrl,
               'time': picture.upload_time
               }
         result.append(re)
