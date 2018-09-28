@@ -61,7 +61,7 @@ def type_recommend():
         temp_r = {'id': r.id,
                   'picture_name': r.name,
                   'url': r.url,
-                  'author_avatar':r.author.avatarUrl
+                  'author_avatar':r.author.avatarUrl,
                   'author_id': r.author_id,
                   'author_name': r.author.name
                   'author_avatarUrl': r.author.avatarUrl
@@ -90,7 +90,7 @@ def square(page):
     except:
         return jsonify({'message':'no more picture'}), 404
     result = []
-    all_author = User.query.filter(User.id.in_([author_id for picture.author_id in square_picture]))
+    # all_author = User.query.filter(User.id.in_([picture.author_id for picture in square_picture]))
     for picture in square_picture:
         re = {'id': picture.id,
               'name': picture.name,
