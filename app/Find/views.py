@@ -63,7 +63,7 @@ def type_recommend():
                   'url': r.url,
                   'author_avatar':r.author.avatarUrl,
                   'author_id': r.author_id,
-                  'author_name': r.author.name
+                  'author_name': r.author.name,
                   'author_avatarUrl': r.author.avatarUrl
                   }
         result.append(temp_r)
