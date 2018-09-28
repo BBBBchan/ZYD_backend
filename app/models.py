@@ -229,7 +229,7 @@ class Picture(db.Model):
     share_count = db.Column(db.Integer, default=0)
 
     # 是否是后台认定的推荐内容,0 是不推荐， 1 是申请推荐中，2是管理员同意的申请 3 是上轮播图
-    isrecommend = db.Column(db.Boolean, default=False)
+    isrecommend = db.Column(db.Integer, default=0)
 
 
 class Video(db.Model):
