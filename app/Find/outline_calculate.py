@@ -10,8 +10,8 @@ def upload_hot():
     request_time = datetime.now()
     pictures = {}
     for picture in all_picture:
-        score = math.log((0.3 * picture.clicks + 0.2 * picture.stars.count()
-                          + 0.3 * picture.comments.count() + 0.2 * picture.share_count) / 4) + (
+        score = math.log(0.1 + (0.3 * picture.clicks + 0.2 * len(picture.stars)
+                          + 0.3 * len(picture.comments) + 0.2 * picture.share_count) / 4) + (
                         request_time - config.base_time).seconds / 36000
         pictures[picture.id] = score
     order_set = sorted(pictures.items(), key=lambda e:e[1],reverse=True)
