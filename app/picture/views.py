@@ -40,6 +40,7 @@ def picture_detail(picture_id):
               'picture_name': picture.name,
               'author_id': picture.author_id,
               "author_name": picture.author.name,
+              'author_avatarUrl':picture.author.avatarUrl,
               'upload_time': picture.upload_time,
               'share_count' : picture.share_count,
               'category_id': picture.category_id,

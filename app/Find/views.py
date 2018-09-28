@@ -63,7 +63,8 @@ def type_recommend():
                   'url': r.url,
                   'author_avatar':r.author.avatarUrl,
                   'author_id': r.author_id,
-                  'author_name': r.author.name
+                  'author_name': r.author.name,
+                  'author_avatarUrl': r.author.avatarUrl
                   }
         result.append(temp_r)
 
@@ -96,7 +97,7 @@ def square(page):
               'url': picture.url,
               'author_id': picture.author_id,
               'author_name': picture.author.name,
-              'author_avatar':picture.author.avatarUrl,
+              'author_avatarUrl':picture.author.avatarUrl,
               'time': picture.upload_time
               }
         result.append(re)
