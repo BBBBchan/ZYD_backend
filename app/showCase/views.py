@@ -10,16 +10,16 @@ from app.config import *
 def create_showcase():
 	data = request.json
 	user_id = data.get('user_id')
-	if user_id == None:
+	if user_id is None:
 		return jsonify({'message':'获取用户id失败'}),400
 	showcase_name = data.get('showcase_name')
-	if showcase_name == None:
+	if showcase_name is None:
 		return jsonify({'message':'获取作品集名称失败'}),401
 	showcase_description = data.get('showcase_description')
-	if showcase_description == None:
+	if showcase_description is None:
 		return jsonify({'message':'获取作品集描述失败'}),402
 	pic_num = data.get('pic_num')
-	if pic_num == None:
+	if pic_num is None:
 		return jsonify({'message':'获取图片数量失败'}),403
 	elif pic_num == 0:
 		return jsonify({'message':'未选择图片'}),404
@@ -62,7 +62,7 @@ def showcase_delete(showcase_id):
 def showcase_list():
 	data = request.json
 	user_id = data.get('user_id')
-	if user_id == None:
+	if user_id is None:
 		return jsonify({'message':'获取用户id失败'}),400
 	page_count = data.get('page_count',10)
 	page_num = data.get('page_num',1)
@@ -92,18 +92,18 @@ def showcase_list():
 def add_pic():
 	data = request.json
 	user_id = data.get('user_id')
-	if user_id == None:
+	if user_id is None:
 		return jsonify({'message':'获取用户id失败'}),400
 	showcase_id = data.get('showcase_id')
-	if showcase_id == None:
+	if showcase_id is None:
 		return jsonify({'message':'获取作品集id失败'}),401
 	pic_num = data.get('pic_num')
-	if pic_num == None:
+	if pic_num is None:
 		return jsonify({'message':'获取图片数量失败'}),402
 	elif pic_num == 0:
 		return jsonify({'message':'选择图片数量为0'}),403
 	all_pic_id = data.get('all_pic_id')
-	if all_pic_id == None:
+	if all_pic_id is None:
 		return jsonify({'message':'获取图片id失败'}),404
 	try:
 		showcase = ShowCase.query.filter_by(id=showcase_id).first()
@@ -131,18 +131,18 @@ def add_pic():
 def delete_pic():
 	data = request.json
 	user_id = data.get('user_id')
-	if user_id == None:
+	if user_id is None:
 		return jsonify({'message':'获取用户id失败'}),400
 	showcase_id = data.get('showcase_id')
-	if showcase_id == None:
+	if showcase_id is None:
 		return jsonify({'message':'获取作品集id失败'}),401
 	pic_num = data.get('pic_num')
-	if pic_num == None:
+	if pic_num is None:
 		return jsonify({'message':'获取图片数量失败'}),402
 	elif pic_num == 0:
 		return jsonify({'message':'选择图片数量为0'}),403
 	all_pic_id = data.get('all_pic_id')
-	if all_pic_id == None:
+	if all_pic_id is None:
 		return jsonify({'message':'获取图片id失败'}),404
 
 	try:
@@ -192,7 +192,7 @@ def showcase_detail(showcase_id):
 		}
 		try:
 			had_star = StarPicture.query.filter_by(content_id=picture.id).first()
-			if had_star == None:
+			if had_star is None:
 				pic['had_star'] = False
 			else:
 				pic['had_star'] = True
@@ -211,16 +211,16 @@ def showcase_detail(showcase_id):
 def showcase_modify():
 	data = request.json
 	user_id = data.get('user_id')
-	if user_id == None:
+	if user_id is None:
 		return jsonify({'message':'获取用户id失败'}),400
 	showcase_id = data.get('showcase_id')
-	if showcase_id == None:
+	if showcase_id is None:
 		return jsonify({'message':'获取作品集id失败'}),401
 	showcase_name = data.get('showcase_name')
-	if showcase_name == None:
+	if showcase_name is None:
 		return jsonify({'message':'获取作品集名称失败'}),402
 	showcase_description = data.get('showcase_description')
-	if showcase_description == None:
+	if showcase_description is None:
 		return jsonify({'message':'获取作品集描述失败'}),403
 
 	try:
