@@ -1,6 +1,7 @@
 # ZYD_backend
 This is a backend project for wxapp Zhongyidian.
 
+
 ## Database Init
 
 > 1.python manage.py db init
