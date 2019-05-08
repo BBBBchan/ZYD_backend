@@ -1,3 +1,4 @@
+import logging
 import os
 
 from flask import Flask
@@ -42,3 +43,7 @@ def create_app(object_name):
 
 env = os.environ.get('APP_ENV', 'dev')
 app = create_app('app.config.%sConfig' % env.capitalize())
+
+
+logging.basicConfig(filename='./log/app.log',
+                    format='[%(asctime)s][%(filename)s][line:%(lineno)d][%(levelname)s] %(message)s')

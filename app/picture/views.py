@@ -40,6 +40,7 @@ def picture_detail(picture_id):
               'picture_name': picture.name,
               'author_id': picture.author_id,
               "author_name": picture.author.name,
+              'author_avatarUrl':picture.author.avatarUrl,
               'upload_time': picture.upload_time,
               'share_count' : picture.share_count,
               'category_id': picture.category_id,
@@ -78,17 +79,21 @@ def upload_picture():
     picture_url = data.get('picture_url',None)
     picture_type = data.get('picture_type_id')
     picture_tag = data.get('picture_tag_id')
+    showcase_id = date.get('showcase_id')
+    if showcase_id is None:
+        return jsonify({'message':'choose showcase'}), 401
     if picture_type is None:
         return jsonify({'message':'no type'}), 401
-    type = Category.query.filter_by(id=picture_type).first()
+    category = Category.query.filter_by(id=picture_type).first()
     tag = Tag.query.filter_by(id=picture_tag).first()
-    if type is None or tag is None:
+    if category is None or tag is None:
         return jsonify({'message': 'can not find this type'}), 404
     if picture_url is None:
-        picture_url = 'https://'+ OSS_OPEN_IP + picture_name + picture_expend
+        picture_url = 'https://'+ OSS_OPEN_IP + picture_name + '.' +picture_expend
     user = User.query.filter_by(id=user_id).first()
     newPic = Picture(name=picture_name,url=picture_url,
-                     category=type,author=user,tag= tag)
+                     category_id=picture_type,author_id=user.id,
+                     tag_id=tag.id,showcase_id=showcase_id)
     try:
         db.session.add(newPic)
         db.session.commit()
